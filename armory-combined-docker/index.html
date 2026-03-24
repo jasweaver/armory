@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Armory — Personal Registry</title>
-<script src="../assets/vendor/jspdf.umd.min.js"></script>
-<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<link rel="shortcut icon" type="image/svg+xml" href="assets/favicon.svg">
+<script src="assets/vendor/jspdf.umd.min.js"></script>
+<script src="assets/vendor/jspdf.plugin.autotable.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
@@ -869,7 +871,7 @@
     <div class="home-card" onclick="showPage('firearms')">
       <div class="home-card-value" id="hc-nfa-pending">0</div>
       <div class="home-card-label">NFA Pending</div>
-      <div class="home-card-sub">Forms not yet submitted</div>
+      <div class="home-card-sub">Forms not yet approved</div>
       <div class="home-card-nav">View Firearms →</div>
     </div>
     <div class="home-card" onclick="showPage('ammo')">
@@ -1149,6 +1151,7 @@
     <select id="g-filter-type" onchange="renderGear()">
       <option value="">All Types</option>
       <option>Magazine</option>
+      <option>Upper</option>
       <option>Barrel</option>
       <option>Optic</option>
       <option>Trigger</option>
@@ -1176,11 +1179,14 @@
           <th onclick="sortGear('manufacturer')">Manufacturer</th>
           <th onclick="sortGear('model')">Model</th>
           <th onclick="sortGear('caliber')">Caliber / Spec</th>
+          <th onclick="sortGear('upperConfig')">Upper Type</th>
+          <th onclick="sortGear('lengthIn')">Length (in)</th>
           <th onclick="sortGear('quantity')">Qty</th>
           <th onclick="sortGear('condition')">Condition</th>
           <th onclick="sortGear('compatFirearm')">Compatible Firearm</th>
           <th onclick="sortGear('location')">Location</th>
           <th onclick="sortGear('notes')">Notes</th>
+          <th>Attachments</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -1212,6 +1218,7 @@
           <select id="gf-type" onchange="updateGearFields()">
             <option value="">Select type…</option>
             <option>Magazine</option>
+            <option>Upper</option>
             <option>Barrel</option>
             <option>Optic</option>
             <option>Trigger</option>
@@ -1248,6 +1255,24 @@
           <div class="form-group">
             <label>Generation / Variant</label>
             <input type="text" id="gf-variant" placeholder="e.g. Gen3, Window, 20rd">
+          </div>
+        </div>
+      </div>
+
+      <div id="gear-upper-fields" style="display:none">
+        <div class="form-section-label">Upper Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Upper Type</label>
+            <select id="gf-upper-config">
+              <option value="">Select…</option>
+              <option>Receiver Only</option>
+              <option>Complete Upper</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Length (inches)</label>
+            <input type="number" id="gf-upper-length" placeholder="e.g. 10.5, 11.5, 16" step="0.1" min="0">
           </div>
         </div>
       </div>
@@ -1370,6 +1395,39 @@
         </div>
       </div>
 
+      <div class="form-section-label" style="margin-top:18px">Photos</div>
+      <div class="attach-grid" style="margin-top:4px">
+        <div>
+          <label style="margin-bottom:6px;display:block">Photo 1</label>
+          <div class="attach-slot" id="slot-gphoto1" onclick="triggerGearFileInput('gf-file-photo1')">
+            <svg class="attach-slot-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span class="attach-slot-label">Click to attach photo</span>
+            <span class="attach-slot-name" id="slot-gphoto1-name" style="display:none"></span>
+            <div class="attach-slot-overlay">
+              <button class="attach-overlay-btn" onclick="event.stopPropagation();triggerGearFileInput('gf-file-photo1')">Replace</button>
+              <button class="attach-overlay-btn remove" onclick="event.stopPropagation();clearGearSlot('gear_photo1')">Remove</button>
+            </div>
+          </div>
+          <input type="file" id="gf-file-photo1" accept="image/*" style="display:none" onchange="handleGearFileSelect(this,'gear_photo1')">
+        </div>
+        <div>
+          <label style="margin-bottom:6px;display:block">Photo 2</label>
+          <div class="attach-slot" id="slot-gphoto2" onclick="triggerGearFileInput('gf-file-photo2')">
+            <svg class="attach-slot-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span class="attach-slot-label">Click to attach photo</span>
+            <span class="attach-slot-name" id="slot-gphoto2-name" style="display:none"></span>
+            <div class="attach-slot-overlay">
+              <button class="attach-overlay-btn" onclick="event.stopPropagation();triggerGearFileInput('gf-file-photo2')">Replace</button>
+              <button class="attach-overlay-btn remove" onclick="event.stopPropagation();clearGearSlot('gear_photo2')">Remove</button>
+            </div>
+          </div>
+          <input type="file" id="gf-file-photo2" accept="image/*" style="display:none" onchange="handleGearFileSelect(this,'gear_photo2')">
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <span class="hint">Gear photos are stored locally in your browser's IndexedDB. They never leave your device.</span>
+      </div>
+
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeGModal()">Cancel</button>
@@ -1489,7 +1547,15 @@
         <div class="help-grid">
           <div class="help-entry">
             <div class="help-term">Photo 1 &amp; 2</div>
-            <div class="help-def">Up to two photographs per firearm. Accepts any image format (JPG, PNG, HEIC, etc.). Thumbnails display in the attachment slot. Recommended uses: overall condition at time of purchase, serial number close-up, engraving documentation for NFA items.<em>Click the pill in the table row to view; click the slot overlay to replace or remove</em></div>
+            <div class="help-def">Up to two photographs per firearm. Accepts common image formats (JPG, PNG, HEIC, etc.). Thumbnails display in the attachment slot. Recommended uses: overall condition at time of purchase, serial number close-up, engraving documentation for NFA items.<em>Click the photo pill in the table row to view; click the slot overlay to replace or remove</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Gear Photo 1 &amp; 2</div>
+            <div class="help-def">Up to two photographs per gear item (including uppers, optics, and accessories). Useful for insurance claims, condition history, and serial/marking snapshots.<em>Shown as a photo pill in the Gear table Attachments column</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Attachments Column</div>
+            <div class="help-def">Firearms and Gear tables include an Attachments column showing pills when files are present. Click a pill to open the viewer, then use Download for a local copy.<em>If a row has no attachments, the column displays —</em></div>
           </div>
           <div class="help-entry">
             <div class="help-term">ATF Form</div>
@@ -1501,7 +1567,7 @@
           </div>
           <div class="help-entry">
             <div class="help-term">Backup</div>
-            <div class="help-def">Use Export CSV regularly to back up your firearm and ammo records as text data. Note that CSV export does not include photos or ATF form attachments — those live only in IndexedDB. To back up attachments, use the Download button in the media viewer to save files locally.<em>Recommended: export CSV monthly and after any major changes</em></div>
+            <div class="help-def">Use Export CSV regularly to back up firearms, ammo, and gear records as text data. Note that CSV/PDF exports do not include binary attachments (photos, ATF forms, or document files) — those live in IndexedDB. To back up attachments, open each file in the viewer and use Download.<em>Recommended: export CSV monthly and after major changes</em></div>
           </div>
         </div>
         <div class="help-note">
@@ -1518,7 +1584,7 @@
           </div>
           <div class="help-entry">
             <div class="help-term">Barrel</div>
-            <div class="help-def">Records length, twist rate, profile (government, pencil, heavy, bull), threading, and caliber. Useful when building or swapping uppers across multiple lowers.<em>e.g. 18" 22 ARC 1:7.7 mid-length, 10.3" 5.56 gov 1:7</em></div>
+            <div class="help-def">Records caliber, length, twist rate, profile (government, pencil, heavy, bull), and threading. Twist Rate is tracked in its own field (not in Caliber / Spec).<em>e.g. 18" 22 ARC 1:7.7, 10.3" 5.56 gov 1:7</em></div>
           </div>
           <div class="help-entry">
             <div class="help-term">Optic</div>
@@ -1531,6 +1597,34 @@
           <div class="help-entry">
             <div class="help-term">Light / Laser</div>
             <div class="help-def">Tracks output (lumens or IR wavelength), battery type, mount/rail system, and pressure switch model. Battery field helps ensure you stock the right cells.<em>e.g. Surefire M300V 500lm CR123, Mawl-C1+ IR 850nm</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Stock / Brace</div>
+            <div class="help-def">Use for buttstocks, braces, and related components. Track platform compatibility and fitment notes in Caliber / Spec and Notes fields.<em>e.g. SBA3 brace, B5 SOPMOD stock</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Upper</div>
+            <div class="help-def">Use for AR-pattern uppers. Select <strong style="color:var(--muted)">Receiver Only</strong> when tracking a stripped/assembled receiver without barrel/BCG, or <strong style="color:var(--muted)">Complete Upper</strong> for full assemblies shipped as complete units. Upper Length (in) tracks assembly length separately from caliber/spec.<em>e.g. Complete 11.5" 5.56 upper, receiver-only 6mm ARC build base</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Length (in) Column</div>
+            <div class="help-def">Gear table includes a shared Length column that auto-populates from Barrel Length for Barrel items and Upper Length for Upper items. Other gear types display — in this column.<em>Use it to sort mixed barrel/upper inventories by length</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Bipod / Tripod</div>
+            <div class="help-def">Track support systems for precision shooting. Use Caliber / Spec for leg range, mount type, or head style.<em>e.g. 6-9" swivel bipod, tripod with ARCA head</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Case / Bag</div>
+            <div class="help-def">Use for hard cases, soft cases, and range bags. Caliber / Spec can store dimensions or carry capacity.<em>e.g. 36" hard case, 2-rifle drag bag</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Cleaning</div>
+            <div class="help-def">Use for rods, jags, solvents, brushes, and maintenance kits. Caliber / Spec can list supported calibers.<em>e.g. 5.56 bore snake, universal cleaning kit</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Other (Gear Type)</div>
+            <div class="help-def">Catch-all type for accessories that do not fit the predefined categories. Use Notes for details and intended host firearm.<em>e.g. torque wrench, armorer tool, bench block</em></div>
           </div>
           <div class="help-entry">
             <div class="help-term">Condition</div>
@@ -1561,6 +1655,10 @@
           <div class="help-entry">
             <div class="help-term">Insurance</div>
             <div class="help-def">Firearms insurance policy documents, appraisal certificates for high-value items, and scheduled item riders. The expiry date field is useful for tracking annual policy renewals.<em>e.g. NRA Carry Guard policy, scheduled item appraisal</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Other (Document Category)</div>
+            <div class="help-def">Use when a file does not map cleanly to a built-in document category. Keep the title and notes specific so search and filtering remain useful.<em>e.g. warranty letter, gunsmith service notes, serial verification sheet</em></div>
           </div>
           <div class="help-entry">
             <div class="help-term">Expiry Alerts</div>
@@ -1597,12 +1695,70 @@
             <div class="help-def">Ammunition loaded to keep the projectile below the speed of sound (~1,125 fps). Eliminates the supersonic crack, making it significantly quieter when used with a suppressor.<em>Best for: suppressed hosts, especially .300 BLK and 9mm</em></div>
           </div>
           <div class="help-entry">
+            <div class="help-term">Tracer</div>
+            <div class="help-def">Projectile includes a pyrotechnic compound that burns in flight, creating a visible trajectory trace. Useful for training and observation but restricted in some ranges/jurisdictions due to fire risk.<em>Best for: trajectory observation, low-light drills (where legal and permitted)</em></div>
+          </div>
+          <div class="help-entry">
             <div class="help-term">Frangible</div>
             <div class="help-def">Bullets designed to disintegrate on impact with a hard surface. Reduces ricochet risk and lead contamination. Common for steel target shooting at close range and indoor ranges.<em>Best for: close-range steel, indoor ranges</em></div>
           </div>
           <div class="help-entry">
+            <div class="help-term">Slug</div>
+            <div class="help-def">Single large shotgun projectile (one projectile per shell), used for longer shotgun distances and greater penetration than shot loads.<em>Best for: shotgun hunting, defensive slug loads, extended-range shotgun use</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Buckshot</div>
+            <div class="help-def">Shotgun load containing multiple large pellets (e.g., 00 buck). Common defensive load with strong close-range stopping power.<em>Best for: defensive shotgun use, close-range applications</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Birdshot</div>
+            <div class="help-def">Shotgun load containing many small pellets optimized for birds and small game. Lower penetration than buckshot/slugs.<em>Best for: bird hunting, clay targets, small game</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Other (Bullet Type)</div>
+            <div class="help-def">Catch-all for specialty rounds not represented by preset options. Use Product Name / SKU and Notes to capture exact load details.<em>Examples: wadcutter, bonded soft point variants, specialty defensive loads</em></div>
+          </div>
+          <div class="help-entry">
             <div class="help-term">CPR</div>
             <div class="help-def">Cost Per Round — calculated automatically. Enter <strong style="color:var(--muted)">Total Paid</strong> and <strong style="color:var(--muted)">Total Rounds Purchased</strong> for bulk buys (e.g. $500 for 1,000 rounds = $0.500/rd). No need to break it down by box. Rounds Per Box is optional and only used for the box count display and +/− button step size. For legacy records with Price Per Box entered, CPR falls back to Price ÷ Rds/Box.<em>Adjust By field lets you set a custom +/− step — e.g. 50 rds per range session</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Tab Field Values (Quick Reference)</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">Firearms: Type</div>
+            <div class="help-def">Allowed values: Pistol, Rifle, Shotgun, SBR, SBS, Suppressor, Machine Gun, AOW, DD.<em>NFA item logic applies automatically to NFA types and/or when NFA Order # is present</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Firearms: NFA Form Status</div>
+            <div class="help-def">Allowed values: Not Submitted, Submitted / Pending, Approved.<em>Home "NFA Pending" and firearms stats include items not yet approved</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Ammo: Bullet Type</div>
+            <div class="help-def">Allowed values: FMJ, JHP, HP, SP, Match / OTM, Subsonic, Tracer, Frangible, Slug, Buckshot, Birdshot, Other.<em>Use Other plus Notes for uncommon projectile types</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Ammo: Stock Status</div>
+            <div class="help-def">Derived values: In Stock, Low Stock, Out of Stock.<em>Low/Out are based on Quantity on Hand and Low Stock Alert threshold</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Documents: Category</div>
+            <div class="help-def">Allowed values: Government / ATF, Permits &amp; Licenses, Trust Documents, Purchase Records, Insurance, Other.<em>Expiry alerts are independent of category and only require Expiry Date</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Gear: Type &amp; Condition</div>
+            <div class="help-def">Type values: Magazine, Upper, Barrel, Optic, Trigger, Stock / Brace, Light / Laser, Bipod / Tripod, Case / Bag, Cleaning, Other. Condition values: New, Good, Worn, Retire.<em>Retire items feed "Needs Replacement" count</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Gear: Upper Type</div>
+            <div class="help-def">Allowed values (when Type = Upper): Receiver Only, Complete Upper.<em>Displayed in the dedicated Upper Type column and included in Gear CSV/PDF exports</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Gear: Length Fields</div>
+            <div class="help-def">Barrel items use Barrel Length (inches). Upper items use Upper Length (inches). Both flow into Gear table Length (in).<em>This keeps caliber/spec and length separate for cleaner records</em></div>
           </div>
         </div>
       </div>
@@ -1881,6 +2037,26 @@ async function getMediaSummary(firearmId) {
   return { photo1: mine.find(m=>m.type==='photo1'), photo2: mine.find(m=>m.type==='photo2'), atf_form: mine.find(m=>m.type==='atf_form') };
 }
 
+async function saveGearMedia(gearId, type, file) {
+  const id  = `${gearId}_${type}`;
+  const buf = await file.arrayBuffer();
+  await dbPut('media', { id, gearId, type, name: file.name, mime: file.type, data: buf });
+}
+
+async function deleteMediaForGear(gearId) {
+  const all = await dbGetAll('media');
+  for (const m of all.filter(m => m.gearId === gearId)) await dbDelete('media', m.id);
+}
+
+async function getGearMediaSummary(gearId) {
+  const all = await dbGetAll('media');
+  const mine = all.filter(m => m.gearId === gearId);
+  return {
+    gear_photo1: mine.find(m => m.type === 'gear_photo1'),
+    gear_photo2: mine.find(m => m.type === 'gear_photo2'),
+  };
+}
+
 // Migrate existing localStorage data into IndexedDB on first run
 async function migrateFromLocalStorage() {
   const fLS = localStorage.getItem('armory_v1');
@@ -2025,7 +2201,7 @@ async function renderFirearms() {
   data = genericSort(data, fSortCol, fSortDir);
 
   document.querySelectorAll('#firearms-table th').forEach(t => { t.classList.remove('sorted','desc'); });
-  const thMap = { color:0, manufacturer:1, model:2, serial:3, caliber:4, type:5, barrelLength:6, overallLength:7, submitted:8, nfaOrderNum:9 };
+  const thMap = { color:0, manufacturer:1, model:2, serial:3, caliber:4, type:5, barrelLength:6, overallLength:7, nfaStatus:8, nfaOrderNum:9 };
   const thIdx = thMap[fSortCol];
   if (thIdx !== undefined) {
     const th = document.querySelectorAll('#firearms-table th')[thIdx];
@@ -2102,6 +2278,22 @@ async function renderFirearms() {
 const pendingFiles = { photo1: null, photo2: null, atf_form: null };
 const removedSlots = new Set();
 
+function getExt(name) {
+  const n = String(name || '').toLowerCase();
+  const i = n.lastIndexOf('.');
+  return i >= 0 ? n.slice(i + 1) : '';
+}
+
+function isPdfLike(fileName, mime) {
+  return String(mime || '').toLowerCase() === 'application/pdf' || getExt(fileName) === 'pdf';
+}
+
+function isImageLike(fileName, mime) {
+  const m = String(mime || '').toLowerCase();
+  if (m.startsWith('image/')) return true;
+  return ['jpg','jpeg','png','gif','webp','bmp','svg','heic','heif','avif','tif','tiff'].includes(getExt(fileName));
+}
+
 function triggerFileInput(id) { document.getElementById(id).click(); }
 
 function handleFileSelect(input, type) {
@@ -2111,8 +2303,8 @@ function handleFileSelect(input, type) {
   removedSlots.delete(type);
   const slot = document.getElementById(`slot-${type}`);
   slot.classList.add('has-file');
-  // Preview image if photo
-  if (type !== 'atf_form' && file.type.startsWith('image/')) {
+  // Photo slots always attempt preview (input accepts images only).
+  if (type !== 'atf_form') {
     const reader = new FileReader();
     reader.onload = e => {
       let img = slot.querySelector('img');
@@ -2179,7 +2371,7 @@ async function loadSlotsForFirearm(firearmId) {
     const slot = document.getElementById(`slot-${type}`);
     if (!slot) continue;
     slot.classList.add('has-file');
-    if (type !== 'atf_form' && m.mime.startsWith('image/')) {
+    if (type !== 'atf_form') {
       const blob = new Blob([m.data], { type: m.mime });
       const url  = URL.createObjectURL(blob);
       let img = slot.querySelector('img');
@@ -2821,14 +3013,22 @@ async function viewMedia(firearmId, type) {
   dlBtn.href        = url;
   dlBtn.download    = m.name;
 
-  if (m.mime === 'application/pdf') {
+  const isPdf = isPdfLike(m.name, m.mime);
+  const isImg = isImageLike(m.name, m.mime);
+
+  if (isPdf) {
     img.style.display    = 'none';
     iframe.style.display = 'block';
     iframe.src           = url;
-  } else {
+  } else if (isImg) {
     iframe.style.display = 'none';
     img.style.display    = 'block';
     img.src              = url;
+  } else {
+    // Unknown types: try iframe viewer; user can always use Download.
+    img.style.display    = 'none';
+    iframe.style.display = 'block';
+    iframe.src           = url;
   }
 
   document.getElementById('viewer-overlay').classList.add('open');
@@ -2856,9 +3056,12 @@ function closeViewer() {
 ═══════════════════════════ */
 let gEditId = null;
 let gSortCol = 'gearType', gSortDir = 'asc';
+const pendingGearFiles = { gear_photo1: null, gear_photo2: null };
+const removedGearSlots = new Set();
 
 const GEAR_TYPE_CLASS = {
   'Magazine':       'gear-magazine',
+  'Upper':          'gear-other',
   'Barrel':         'gear-barrel',
   'Optic':          'gear-optic',
   'Trigger':        'gear-trigger',
@@ -2886,13 +3089,15 @@ function updateGearFields() {
   const specLabel = document.getElementById('gf-spec-label');
   const specInput = document.getElementById('gf-caliber');
   document.getElementById('gear-mag-fields').style.display     = type === 'Magazine'     ? '' : 'none';
+  document.getElementById('gear-upper-fields').style.display   = type === 'Upper'        ? '' : 'none';
   document.getElementById('gear-barrel-fields').style.display  = type === 'Barrel'       ? '' : 'none';
   document.getElementById('gear-optic-fields').style.display   = type === 'Optic'        ? '' : 'none';
   document.getElementById('gear-trigger-fields').style.display = type === 'Trigger'      ? '' : 'none';
   document.getElementById('gear-light-fields').style.display   = type === 'Light / Laser'? '' : 'none';
   // Update spec label placeholder per type
   const specs = {
-    'Magazine':'Caliber', 'Barrel':'Caliber / Twist', 'Optic':'Magnification range',
+    'Magazine':'Caliber', 'Barrel':'Caliber', 'Optic':'Magnification range',
+    'Upper':'Caliber',
     'Trigger':'Platform', 'Stock / Brace':'Platform', 'Light / Laser':'Output',
     'Bipod / Tripod':'Leg range', 'Case / Bag':'Dimensions / capacity',
     'Cleaning':'Caliber(s)', 'Other':'Spec / detail',
@@ -2907,17 +3112,139 @@ function sortGear(col) {
   renderGear();
 }
 
-function renderGear() {
+function triggerGearFileInput(id) { document.getElementById(id).click(); }
+
+function handleGearFileSelect(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  pendingGearFiles[type] = file;
+  removedGearSlots.delete(type);
+
+  const slotId = type === 'gear_photo1' ? 'slot-gphoto1' : 'slot-gphoto2';
+  const slot = document.getElementById(slotId);
+  if (!slot) return;
+  slot.classList.add('has-file');
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    let img = slot.querySelector('img');
+    if (!img) { img = document.createElement('img'); slot.prepend(img); }
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+
+  const nameEl = document.getElementById(`${slotId}-name`);
+  nameEl.textContent = file.name;
+  nameEl.style.display = 'block';
+
+  const icon = slot.querySelector('.attach-slot-icon');
+  const label = slot.querySelector('.attach-slot-label');
+  if (icon) icon.style.display = 'none';
+  if (label) label.style.display = 'none';
+}
+
+function clearGearSlot(type) {
+  pendingGearFiles[type] = null;
+  removedGearSlots.add(type);
+
+  const slotId = type === 'gear_photo1' ? 'slot-gphoto1' : 'slot-gphoto2';
+  const inputId = type === 'gear_photo1' ? 'gf-file-photo1' : 'gf-file-photo2';
+  const slot = document.getElementById(slotId);
+  if (!slot) return;
+
+  slot.classList.remove('has-file');
+  const img = slot.querySelector('img');
+  if (img) img.remove();
+
+  const nameEl = document.getElementById(`${slotId}-name`);
+  nameEl.style.display = 'none';
+
+  const icon = slot.querySelector('.attach-slot-icon');
+  const label = slot.querySelector('.attach-slot-label');
+  if (icon) icon.style.display = '';
+  if (label) label.style.display = '';
+
+  const inp = document.getElementById(inputId);
+  if (inp) inp.value = '';
+}
+
+function resetGearSlots() {
+  ['gear_photo1', 'gear_photo2'].forEach(type => {
+    pendingGearFiles[type] = null;
+    removedGearSlots.delete(type);
+
+    const slotId = type === 'gear_photo1' ? 'slot-gphoto1' : 'slot-gphoto2';
+    const slot = document.getElementById(slotId);
+    if (!slot) return;
+    slot.classList.remove('has-file');
+    const img = slot.querySelector('img');
+    if (img) img.remove();
+
+    const nameEl = document.getElementById(`${slotId}-name`);
+    if (nameEl) nameEl.style.display = 'none';
+
+    const icon = slot.querySelector('.attach-slot-icon');
+    const label = slot.querySelector('.attach-slot-label');
+    if (icon) icon.style.display = '';
+    if (label) label.style.display = '';
+  });
+
+  ['gf-file-photo1','gf-file-photo2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+async function loadSlotsForGear(gearId) {
+  const summary = await getGearMediaSummary(gearId);
+  const map = [
+    { type: 'gear_photo1', slotId: 'slot-gphoto1' },
+    { type: 'gear_photo2', slotId: 'slot-gphoto2' },
+  ];
+
+  for (const x of map) {
+    const m = summary[x.type];
+    if (!m) continue;
+    const slot = document.getElementById(x.slotId);
+    if (!slot) continue;
+    slot.classList.add('has-file');
+
+    const blob = new Blob([m.data], { type: m.mime || '' });
+    const url = URL.createObjectURL(blob);
+    let img = slot.querySelector('img');
+    if (!img) { img = document.createElement('img'); slot.prepend(img); }
+    img.src = url;
+
+    const nameEl = document.getElementById(`${x.slotId}-name`);
+    nameEl.textContent = m.name;
+    nameEl.style.display = 'block';
+    const icon = slot.querySelector('.attach-slot-icon');
+    const label = slot.querySelector('.attach-slot-label');
+    if (icon) icon.style.display = 'none';
+    if (label) label.style.display = 'none';
+  }
+}
+
+async function openGearAttachViewer(gearId) {
+  const summary = await getGearMediaSummary(gearId);
+  if (summary.gear_photo1) await viewMedia(gearId, 'gear_photo1');
+  else if (summary.gear_photo2) await viewMedia(gearId, 'gear_photo2');
+}
+
+async function renderGear() {
   const q  = document.getElementById('g-search').value.toLowerCase();
   const tf = document.getElementById('g-filter-type').value;
   const cf = document.getElementById('g-filter-condition').value;
 
   let data = gear.filter(g => {
-    if (q && !['gearType','manufacturer','model','caliber','compatFirearm','location','notes'].some(k => String(g[k]||'').toLowerCase().includes(q))) return false;
+    if (q && !['gearType','manufacturer','model','caliber','upperConfig','barrelLength','upperLength','compatFirearm','location','notes'].some(k => String(g[k]||'').toLowerCase().includes(q))) return false;
     if (tf && g.gearType !== tf) return false;
     if (cf && g.condition !== cf) return false;
     return true;
-  });
+  }).map(g => ({
+    ...g,
+    lengthIn: g.gearType === 'Upper' ? (g.upperLength || '') : (g.barrelLength || ''),
+  }));
 
   data = data.slice().sort((a, b) => {
     let av = a[gSortCol] !== undefined ? a[gSortCol] : '';
@@ -2940,6 +3267,7 @@ function renderGear() {
       // Build a spec detail string from type-specific fields
       let specDetail = g.caliber || '';
       if (g.gearType === 'Magazine' && g.capacity) specDetail += (specDetail ? ' · ' : '') + g.capacity + ' rd';
+      if (g.gearType === 'Upper' && g.upperConfig) specDetail = g.upperConfig + (specDetail ? ' · ' + specDetail : '');
       if (g.gearType === 'Barrel'   && g.barrelLength) specDetail += (specDetail ? ' · ' : '') + g.barrelLength + '"';
       if (g.gearType === 'Barrel'   && g.twist)  specDetail += ' ' + g.twist;
       if (g.gearType === 'Optic'    && g.magnification) specDetail = g.magnification;
@@ -2950,17 +3278,32 @@ function renderGear() {
         <td class="td-muted">${g.manufacturer||'—'}</td>
         <td class="td-bold">${g.model||'—'}</td>
         <td class="td-mono" style="font-size:11px">${specDetail||'—'}</td>
+        <td class="td-mono" style="font-size:11px">${g.upperConfig||'—'}</td>
+        <td class="td-mono">${g.lengthIn ? parseFloat(g.lengthIn).toFixed(1) : '—'}</td>
         <td class="td-mono" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent)">${parseInt(g.quantity)||1}</td>
         <td><span class="${gearCondClass(g.condition)}">${g.condition||'—'}</span></td>
         <td class="td-muted" style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${g.compatFirearm||''}">${g.compatFirearm||'—'}</td>
         <td>${g.location ? `<span class="location-tag">${g.location}</span>` : '<span class="td-muted">—</span>'}</td>
         <td class="td-muted" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${g.notes||''}">${g.notes||''}</td>
+        <td class="td-actions" id="gear-attach-indicators-${g.id}"><span style="color:var(--muted2);font-size:11px">—</span></td>
         <td class="td-actions">
           <button class="btn btn-sm" onclick="openGModal('${g.id}')">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteGear('${g.id}')" title="Delete" style="padding:4px 8px">${TRASH_ICON}</button>
         </td>
       </tr>`;
     }).join('');
+
+    for (const g of data) {
+      const summary = await getGearMediaSummary(g.id);
+      const el = document.getElementById(`gear-attach-indicators-${g.id}`);
+      if (!el) continue;
+      const count = (summary.gear_photo1 ? 1 : 0) + (summary.gear_photo2 ? 1 : 0);
+      if (count > 0) {
+        el.innerHTML = `<div class="attach-indicators"><span class="attach-pill attach-pill-photo" onclick="openGearAttachViewer('${g.id}')" title="View photos">📷 ${count} photo${count>1?'s':''}</span></div>`;
+      } else {
+        el.innerHTML = '<span style="color:var(--muted2);font-size:11px">—</span>';
+      }
+    }
   }
 
   // Stats bar
@@ -2984,9 +3327,10 @@ function renderGear() {
 
 function openGModal(id) {
   gEditId = id || null;
+  resetGearSlots();
   document.getElementById('gmodal-title').textContent = id ? 'Edit Gear' : 'Add Gear';
   // Hide all type-specific fields first
-  ['gear-mag-fields','gear-barrel-fields','gear-optic-fields','gear-trigger-fields','gear-light-fields'].forEach(f => {
+  ['gear-mag-fields','gear-upper-fields','gear-barrel-fields','gear-optic-fields','gear-trigger-fields','gear-light-fields'].forEach(f => {
     document.getElementById(f).style.display = 'none';
   });
   if (id) {
@@ -3003,6 +3347,8 @@ function openGModal(id) {
     document.getElementById('gf-notes').value        = g.notes||'';
     // Type-specific
     if (document.getElementById('gf-capacity'))     document.getElementById('gf-capacity').value     = g.capacity||'';
+    if (document.getElementById('gf-upper-config')) document.getElementById('gf-upper-config').value = g.upperConfig||'';
+    if (document.getElementById('gf-upper-length')) document.getElementById('gf-upper-length').value = g.upperLength||'';
     if (document.getElementById('gf-variant'))      document.getElementById('gf-variant').value      = g.variant||'';
     if (document.getElementById('gf-barrel-length'))document.getElementById('gf-barrel-length').value= g.barrelLength||'';
     if (document.getElementById('gf-profile'))      document.getElementById('gf-profile').value      = g.profile||'';
@@ -3019,9 +3365,10 @@ function openGModal(id) {
     if (document.getElementById('gf-rail'))         document.getElementById('gf-rail').value         = g.railMount||'';
     if (document.getElementById('gf-switch'))       document.getElementById('gf-switch').value       = g.pressureSwitch||'';
     updateGearFields();
+    loadSlotsForGear(id);
   } else {
     ['gf-manufacturer','gf-model','gf-caliber','gf-compat','gf-location','gf-notes',
-     'gf-capacity','gf-variant','gf-barrel-length','gf-twist','gf-threading',
+     'gf-capacity','gf-upper-config','gf-upper-length','gf-variant','gf-barrel-length','gf-twist','gf-threading',
      'gf-magnification','gf-reticle','gf-mount','gf-zero','gf-pull','gf-platform',
      'gf-lumens','gf-battery','gf-rail','gf-switch'].forEach(i => {
        const el = document.getElementById(i); if (el) el.value = '';
@@ -3035,7 +3382,12 @@ function openGModal(id) {
   setTimeout(() => document.getElementById('gf-type').focus(), 50);
 }
 
-function closeGModal() { document.getElementById('gear-modal').classList.remove('open'); gEditId = null; }
+function closeGModal() {
+  document.getElementById('gear-modal').classList.remove('open');
+  gEditId = null;
+  resetGearSlots();
+}
+
 
 async function saveGear() {
   const gearType = document.getElementById('gf-type').value;
@@ -3058,6 +3410,9 @@ async function saveGear() {
     notes:          getVal('gf-notes'),
     // Magazine
     capacity:       getVal('gf-capacity'),
+    // Upper
+    upperConfig:    getVal('gf-upper-config'),
+    upperLength:    getVal('gf-upper-length'),
     variant:        getVal('gf-variant'),
     // Barrel
     barrelLength:   getVal('gf-barrel-length'),
@@ -3081,6 +3436,12 @@ async function saveGear() {
   };
   if (!gEditId) entry.createdAt = entry.updatedAt;
   await dbPut('gear', entry);
+
+  for (const type of ['gear_photo1', 'gear_photo2']) {
+    if (pendingGearFiles[type]) await saveGearMedia(entry.id, type, pendingGearFiles[type]);
+    else if (removedGearSlots.has(type)) await dbDelete('media', `${entry.id}_${type}`);
+  }
+
   gear = await dbGetAll('gear');
   closeGModal(); renderGear();
 }
@@ -3088,15 +3449,16 @@ async function saveGear() {
 async function deleteGear(id) {
   if (!confirm('Remove this item from gear inventory?')) return;
   await dbDelete('gear', id);
+  await deleteMediaForGear(id);
   gear = await dbGetAll('gear');
   renderGear();
 }
 
 function exportGearCSV() {
-  const hdrs = ['Type','Manufacturer','Model','Caliber / Spec','Quantity','Condition','Compatible Firearm','Location','Notes','Capacity','Barrel Length','Profile','Twist','Threading','Magnification','Reticle','Mount','Zero','Pull Weight','Lumens'];
+  const hdrs = ['Type','Manufacturer','Model','Caliber / Spec','Quantity','Condition','Compatible Firearm','Location','Notes','Upper Type','Upper Length','Capacity','Barrel Length','Profile','Twist','Threading','Magnification','Reticle','Mount','Zero','Pull Weight','Lumens'];
   const rows = gear.map(g => [
     g.gearType, g.manufacturer, g.model, g.caliber, g.quantity, g.condition,
-    g.compatFirearm, g.location, g.notes, g.capacity, g.barrelLength,
+    g.compatFirearm, g.location, g.notes, g.upperConfig, g.upperLength, g.capacity, g.barrelLength,
     g.profile, g.twist, g.threading, g.magnification, g.reticle,
     g.mount, g.zeroDistance, g.pullWeight, g.lumens,
   ].map(v => `"${String(v||'').replace(/"/g,'""')}"`));
@@ -3135,7 +3497,7 @@ function exportGearPDF() {
 
   doc.autoTable({
     startY: 60,
-    head: [['Type','Manufacturer','Model','Caliber / Spec','Qty','Condition','Compatible Firearm','Location','Notes']],
+    head: [['Type','Manufacturer','Model','Caliber / Spec','Upper Type','Upper Length','Qty','Condition','Compatible Firearm','Location','Notes']],
     body: gear.map(g => {
       let specDetail = g.caliber || '';
       if (g.gearType === 'Magazine'     && g.capacity)      specDetail += (specDetail ? ' · ' : '') + g.capacity + ' rd';
@@ -3144,11 +3506,14 @@ function exportGearPDF() {
       if (g.gearType === 'Optic'        && g.magnification) specDetail = g.magnification;
       if (g.gearType === 'Trigger'      && g.pullWeight)    specDetail = g.pullWeight;
       if (g.gearType === 'Light / Laser'&& g.lumens)        specDetail = g.lumens;
+      const upperLen = g.upperLength ? parseFloat(g.upperLength).toFixed(1) : '';
       return [
         g.gearType || '',
         g.manufacturer || '',
         g.model || '',
         specDetail,
+        g.upperConfig || '',
+        upperLen,
         parseInt(g.quantity) || 1,
         g.condition || '',
         g.compatFirearm || '',
@@ -3173,18 +3538,20 @@ function exportGearPDF() {
     },
     alternateRowStyles: { fillColor: [13, 14, 16] },
     columnStyles: {
-      0: { cellWidth: 68 },
-      1: { cellWidth: 72 },
-      2: { cellWidth: 80 },
-      3: { cellWidth: 72 },
-      4: { cellWidth: 28 },
-      5: { cellWidth: 54 },
-      6: { cellWidth: 90 },
-      7: { cellWidth: 60 },
-      8: { cellWidth: 'auto' },
+      0: { cellWidth: 58 },
+      1: { cellWidth: 64 },
+      2: { cellWidth: 72 },
+      3: { cellWidth: 60 },
+      4: { cellWidth: 58 },
+      5: { cellWidth: 42 },
+      6: { cellWidth: 26 },
+      7: { cellWidth: 48 },
+      8: { cellWidth: 84 },
+      9: { cellWidth: 52 },
+      10: { cellWidth: 'auto' },
     },
     didParseCell(data) {
-      if (data.section === 'body' && data.column.index === 5) {
+      if (data.section === 'body' && data.column.index === 7) {
         const v = data.cell.raw;
         if (v === 'New')    data.cell.styles.textColor = [94, 184, 122];
         else if (v === 'Good')   data.cell.styles.textColor = [200, 169, 110];
@@ -3264,6 +3631,12 @@ async function renderDocs() {
 
   // update sort indicators
   document.querySelectorAll('#docs-table th').forEach(t => t.classList.remove('sorted','desc'));
+  const dThMap = { name:0, category:1, docDate:2, notes:3, expiryDate:4 };
+  const dThIdx = dThMap[dSortCol];
+  if (dThIdx !== undefined) {
+    const th = document.querySelectorAll('#docs-table th')[dThIdx];
+    if (th) { th.classList.add('sorted'); if (dSortDir === 'desc') th.classList.add('desc'); }
+  }
 
   const tbody = document.getElementById('docs-tbody');
   const empty = document.getElementById('docs-empty');
@@ -3442,14 +3815,22 @@ async function viewDocFile(id) {
   dlBtn.href        = url;
   dlBtn.download    = file.name;
 
-  if (file.mime === 'application/pdf') {
+  const isPdf = isPdfLike(file.name, file.mime);
+  const isImg = isImageLike(file.name, file.mime);
+
+  if (isPdf) {
     img.style.display    = 'none';
     iframe.style.display = 'block';
     iframe.src           = url;
-  } else {
+  } else if (isImg) {
     iframe.style.display = 'none';
     img.style.display    = 'block';
     img.src              = url;
+  } else {
+    // Unknown types: try iframe viewer; user can always use Download.
+    img.style.display    = 'none';
+    iframe.style.display = 'block';
+    iframe.src           = url;
   }
   document.getElementById('viewer-overlay').classList.add('open');
 }
