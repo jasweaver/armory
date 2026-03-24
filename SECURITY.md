@@ -8,7 +8,9 @@ The latest commit on `main` is the supported version.
 
 Please do not open public issues for sensitive vulnerabilities.
 
-Instead, report details privately to the repository owner with:
+Use GitHub private vulnerability reporting for this repository whenever possible.
+
+Include:
 
 - Affected component/file
 - Reproduction steps
@@ -16,6 +18,14 @@ Instead, report details privately to the repository owner with:
 - Suggested remediation (if available)
 
 You should receive an acknowledgement within a few business days.
+
+## Repository Security Controls
+
+- Branch protection is enabled on `main` and requires pull requests.
+- Dependabot security updates are enabled.
+- Automated security fixes are enabled.
+- Secret scanning and push protection are enabled.
+- CodeQL analysis is configured in `.github/workflows/codeql.yml`.
 
 ## Security Notes
 
