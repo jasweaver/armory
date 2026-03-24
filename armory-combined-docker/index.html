@@ -1935,6 +1935,7 @@ function showPage(page) {
       <button class="btn" onclick="showPage('ammo')">Ammo</button>
       <button class="btn" onclick="showPage('docs')">Documents</button>
       <button class="btn" onclick="showPage('gear')">Gear</button>`;
+    updateHome();
   } else if (page === 'firearms') {
     ha.innerHTML = `
       <button class="btn" onclick="exportFirearmsCSV()">Export CSV</button>
@@ -2696,8 +2697,6 @@ function exportAmmoPDF() {
    HOME DASHBOARD
 ═══════════════════════════ */
 function updateHome() {
-  if (currentPage !== 'home') return;
-
   // hero date
   document.getElementById('hero-date').textContent =
     new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
