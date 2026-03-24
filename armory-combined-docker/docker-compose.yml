@@ -1,0 +1,9 @@
+services:
+  armory:
+    build:
+      context: ..
+      dockerfile: armory-combined-docker/Dockerfile
+    container_name: armory
+    ports:
+      - "8080:80"
+    restart: unless-stopped

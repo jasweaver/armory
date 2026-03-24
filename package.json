@@ -1,0 +1,52 @@
+{
+  "name": "armory-desktop",
+  "version": "1.0.0",
+  "description": "Armory personal registry desktop app",
+  "main": "main.js",
+  "author": "NCTSI",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "electron .",
+    "dist": "electron-builder --mac dmg --win nsis",
+    "dist:mac": "electron-builder --mac dmg",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.nctsi.armory",
+    "productName": "Armory",
+    "files": [
+      "main.js",
+      "armory_combined.html",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "dmg": {
+      "title": "Armory ${version}",
+      "iconSize": 120,
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Armory-Setup-${version}.${ext}"
+    }
+  }
+}

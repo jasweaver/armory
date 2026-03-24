@@ -1,0 +1,3524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armory — Personal Registry</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+  :root {
+    --bg:      #0d0e10;
+    --bg2:     #141518;
+    --bg3:     #1c1e22;
+    --border:  #2a2d33;
+    --border2: #3a3e47;
+    --accent:  #c8a96e;
+    --accent2: #e8c98e;
+    --text:    #e8e6e0;
+    --muted:   #7a7d85;
+    --muted2:  #555860;
+    --danger:  #e05555;
+    --warning: #d4893a;
+    --success: #5eb87a;
+    --info:    #5b9bd5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ════════════════════════════════
+     HEADER
+  ════════════════════════════════ */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    letter-spacing: 5px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: color .15s;
+  }
+  .logo:hover { color: var(--accent2); }
+
+  .logo-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-left: 12px;
+    vertical-align: middle;
+  }
+
+  .header-actions { display: flex; gap: 10px; align-items: center; }
+
+  /* ════════════════════════════════
+     NAV TABS
+  ════════════════════════════════ */
+  .nav-tabs {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    gap: 0;
+  }
+
+  .nav-tab {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 20px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+    user-select: none;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .nav-tab-badge {
+    font-size: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 2px;
+    padding: 1px 5px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .nav-tab.active .nav-tab-badge { background: rgba(200,169,110,.15); border-color: rgba(200,169,110,.3); color: var(--accent); }
+
+  /* ════════════════════════════════
+     PAGE SECTIONS
+  ════════════════════════════════ */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ════════════════════════════════
+     BUTTONS
+  ════════════════════════════════ */
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 7px 16px;
+    border-radius: 3px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .15s;
+    text-transform: uppercase;
+  }
+  .btn:hover { background: var(--bg3); border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #0d0e10; border-color: var(--accent); font-weight: 500; }
+  .btn-primary:hover { background: var(--accent2); border-color: var(--accent2); color: #0d0e10; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-danger { border-color: #3d2020; color: var(--danger); }
+  .btn-danger:hover { background: #1e1010; border-color: var(--danger); color: var(--danger); }
+
+  /* ════════════════════════════════
+     HOME DASHBOARD
+  ════════════════════════════════ */
+  .home-hero {
+    padding: 4rem 2rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #141518 0%, #0d0e10 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .home-hero::before {
+    content: 'ARMORY';
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 220px;
+    letter-spacing: 20px;
+    color: rgba(200,169,110,.03);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    letter-spacing: 10px;
+    color: var(--accent);
+    line-height: 1;
+    position: relative;
+  }
+
+  .hero-subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 10px;
+    position: relative;
+  }
+
+  .hero-divider {
+    width: 60px;
+    height: 1px;
+    background: var(--accent);
+    margin: 24px auto;
+    opacity: .4;
+  }
+
+  .hero-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    letter-spacing: 2px;
+    position: relative;
+  }
+
+  /* Summary cards grid */
+  .home-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .home-card {
+    background: var(--bg2);
+    padding: 1.75rem 2rem;
+    cursor: pointer;
+    transition: background .15s;
+    position: relative;
+  }
+  .home-card:hover { background: var(--bg3); }
+  .home-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .home-card:hover::after { opacity: 1; }
+
+  .home-card-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .home-card-value.warn { color: var(--warning); }
+  .home-card-value.danger { color: var(--danger); }
+  .home-card-value.success { color: var(--success); }
+
+  .home-card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .home-card-sub {
+    font-size: 12px;
+    color: var(--muted2);
+    margin-top: 6px;
+  }
+
+  .home-card-nav {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    margin-top: 8px;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: opacity .15s;
+  }
+  .home-card:hover .home-card-nav { opacity: 1; }
+
+  /* NFA pending table on home */
+  .home-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  @media (max-width: 860px) {
+    .home-sections { grid-template-columns: 1fr; }
+  }
+
+  .home-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .home-section-title a {
+    color: var(--accent);
+    font-size: 10px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .home-section-title a:hover { color: var(--accent2); }
+
+  .home-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .home-list-item:last-child { border-bottom: none; }
+
+  .home-list-name { font-weight: 500; }
+  .home-list-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'IBM Plex Mono', monospace; }
+
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+  .dot-warn { background: var(--warning); }
+  .dot-danger { background: var(--danger); }
+  .dot-ok { background: var(--success); }
+
+  .home-empty {
+    font-size: 12px;
+    color: var(--muted2);
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 16px 0;
+  }
+
+  /* ════════════════════════════════
+     STATS BAR (shared)
+  ════════════════════════════════ */
+  .stats-bar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 2rem;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--accent); line-height: 1; }
+  .stat-value.warn { color: var(--warning); }
+  .stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .stat-divider { width: 1px; height: 32px; background: var(--border); }
+
+  /* ════════════════════════════════
+     CONTROLS
+  ════════════════════════════════ */
+  .controls {
+    padding: 16px 2rem;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 360px; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+  input[type="text"], input[type="number"], select, textarea {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 3px;
+    padding: 7px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    transition: border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  .search-wrap input { padding-left: 34px; }
+  select { cursor: pointer; }
+  select option { background: var(--bg2); }
+
+  /* ════════════════════════════════
+     TABLE (shared)
+  ════════════════════════════════ */
+  .table-wrap { padding: 1.5rem 2rem; overflow-x: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { border-bottom: 2px solid var(--border2); }
+
+  th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color .15s;
+  }
+  th:hover { color: var(--accent); }
+  th.sorted { color: var(--accent); }
+  th.sorted::after { content: ' ↑'; }
+  th.sorted.desc::after { content: ' ↓'; }
+
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:hover { background: var(--bg2); }
+  tbody tr.low-stock { border-left: 2px solid var(--warning); }
+  tbody tr.out-stock  { border-left: 2px solid var(--danger); }
+
+  td { padding: 11px 12px; vertical-align: middle; color: var(--text); }
+
+  .td-mono  { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+  .td-bold  { font-weight: 500; }
+  .td-muted { color: var(--muted); font-size: 12px; }
+  .td-actions { white-space: nowrap; }
+
+  /* ════════════════════════════════
+     FIREARMS-SPECIFIC
+  ════════════════════════════════ */
+  #firearms-table { min-width: 1000px; }
+
+  .color-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 2px; border: 1px solid rgba(255,255,255,.15); vertical-align: middle; margin-right: 6px; }
+
+  .badge { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .5px; padding: 2px 7px; border-radius: 2px; text-transform: uppercase; white-space: nowrap; }
+  .badge-nfa  { background: rgba(200,169,110,.15); color: var(--accent); border: 1px solid rgba(200,169,110,.3); }
+  .badge-std  { background: rgba(90,90,100,.15);   color: var(--muted);  border: 1px solid var(--border); }
+  .badge-fmj  { background: rgba(91,155,213,.12);  color: var(--info);   border: 1px solid rgba(91,155,213,.25); }
+  .badge-jhp  { background: rgba(200,169,110,.12); color: var(--accent); border: 1px solid rgba(200,169,110,.25); }
+  .badge-hp   { background: rgba(200,169,110,.12); color: var(--accent); border: 1px solid rgba(200,169,110,.25); }
+  .badge-sp   { background: rgba(94,184,122,.12);  color: var(--success);border: 1px solid rgba(94,184,122,.25); }
+  .badge-match{ background: rgba(200,169,110,.2);  color: var(--accent2);border: 1px solid rgba(200,169,110,.4); }
+  .badge-sub  { background: rgba(212,137,58,.12);  color: var(--warning);border: 1px solid rgba(212,137,58,.25); }
+  .badge-tracer{background: rgba(224,85,85,.12);   color: var(--danger); border: 1px solid rgba(224,85,85,.25); }
+  .badge-other{ background: rgba(90,90,100,.15);   color: var(--muted);  border: 1px solid var(--border); }
+
+  .submitted-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+  .submitted-approved { background: var(--success); }
+  .submitted-pending  { background: var(--warning); }
+  .submitted-none     { background: var(--muted2); }
+
+  .nfa-order       { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--accent); }
+  .nfa-order.empty { color: var(--muted2); }
+
+  /* ════════════════════════════════
+     AMMO-SPECIFIC
+  ════════════════════════════════ */
+  #ammo-table { min-width: 1100px; }
+
+  .qty-cell { display: flex; align-items: center; gap: 8px; }
+  .qty-num  { font-family: 'Bebas Neue', sans-serif; font-size: 18px; line-height: 1; min-width: 40px; }
+  .qty-ok   { color: var(--success); }
+  .qty-low  { color: var(--warning); }
+  .qty-out  { color: var(--danger); }
+
+  .qty-adj { display: flex; gap: 4px; }
+  .qty-btn {
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+    width: 24px; height: 24px; border-radius: 3px;
+    border: 1px solid var(--border2); background: var(--bg3); color: var(--text);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .12s; padding: 0; line-height: 1;
+  }
+  .qty-btn:hover       { border-color: var(--accent); color: var(--accent); }
+  .qty-btn.minus:hover { border-color: var(--danger);  color: var(--danger); }
+
+  .location-tag { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted); background: var(--bg3); border: 1px solid var(--border); border-radius: 2px; padding: 1px 6px; white-space: nowrap; }
+  .price-cell { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); }
+
+  /* ════════════════════════════════
+     EMPTY STATE
+  ════════════════════════════════ */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state .es-icon { font-family: 'Bebas Neue', sans-serif; font-size: 48px; color: var(--border2); letter-spacing: 4px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; margin-top: 6px; }
+
+  /* ════════════════════════════════
+     MODAL (shared)
+  ════════════════════════════════ */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+
+  .modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: 4px; width: 640px; max-width: 96vw; max-height: 90vh; overflow-y: auto; }
+
+  .modal-header { padding: 18px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title  { font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: var(--accent); }
+  .modal-close  { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 4px; transition: color .15s; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body   { padding: 20px 24px; }
+  .modal-footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  .form-section-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted2); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 18px 0 14px; }
+  .form-section-label:first-child { margin-top: 0; }
+
+  .form-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .hint { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+
+  .form-check { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; cursor: pointer; }
+  .form-check input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+
+  .btn-help {
+    border-color: var(--border2);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 6px 14px;
+  }
+  .btn-help:hover { border-color: var(--accent); color: var(--accent); background: var(--bg3); }
+
+  /* ════════════════════════════════
+     HELP MODAL
+  ════════════════════════════════ */
+  .help-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 300; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .help-modal-overlay.open { display: flex; }
+
+  .help-modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    width: 780px;
+    max-width: 98vw;
+  }
+
+  .help-modal-header {
+    padding: 18px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    z-index: 1;
+  }
+
+  .help-modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--accent);
+  }
+
+  .help-modal-body { padding: 24px 28px 32px; }
+
+  .help-section { margin-bottom: 28px; }
+  .help-section:last-child { margin-bottom: 0; }
+
+  .help-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+
+  .help-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 24px;
+  }
+
+  @media (max-width: 560px) { .help-grid { grid-template-columns: 1fr; } }
+
+  .help-entry {
+    display: flex;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .help-entry:last-child { border-bottom: none; }
+
+  .help-term {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    min-width: 72px;
+    padding-top: 1px;
+    letter-spacing: .5px;
+    flex-shrink: 0;
+  }
+
+  .help-def { font-size: 12px; color: var(--text); line-height: 1.55; }
+  .help-def em { color: var(--muted); font-style: normal; font-size: 11px; display: block; margin-top: 2px; }
+
+  .help-note {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 2px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 12px;
+  }
+  .help-note strong { color: var(--accent); font-weight: 500; }
+
+  /* ════════════════════════════════
+     ATTACHMENT UI
+  ════════════════════════════════ */
+  .attach-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .attach-slot {
+    border: 1px dashed var(--border2);
+    border-radius: 3px;
+    background: var(--bg3);
+    aspect-ratio: 4/3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .attach-slot:hover { border-color: var(--accent); background: rgba(200,169,110,.05); }
+  .attach-slot.has-file { border-style: solid; border-color: var(--border2); }
+
+  .attach-slot img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    position: absolute; inset: 0;
+  }
+
+  .attach-slot-icon { color: var(--muted2); margin-bottom: 6px; }
+  .attach-slot-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted2); letter-spacing: .5px; text-align: center; padding: 0 8px; }
+  .attach-slot-name { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--accent); text-align: center; padding: 4px 8px; position: absolute; bottom: 0; left: 0; right: 0; background: rgba(13,14,16,.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .attach-slot-overlay {
+    position: absolute; inset: 0;
+    background: rgba(13,14,16,.7);
+    display: flex; gap: 8px;
+    align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .15s;
+  }
+  .attach-slot.has-file:hover .attach-slot-overlay { opacity: 1; }
+
+  .attach-overlay-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; padding: 4px 8px;
+    border-radius: 2px; border: 1px solid var(--border2);
+    background: var(--bg2); color: var(--text);
+    cursor: pointer; transition: border-color .15s;
+  }
+  .attach-overlay-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .attach-overlay-btn.remove { border-color: #3d2020; color: var(--danger); }
+  .attach-overlay-btn.remove:hover { background: #1e1010; }
+
+  /* inline attachment indicators on table rows */
+  .attach-indicators { display: flex; gap: 4px; align-items: center; }
+  .attach-pill {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    padding: 1px 5px; border-radius: 2px;
+    border: 1px solid; cursor: pointer; transition: opacity .15s;
+  }
+  .attach-pill:hover { opacity: .7; }
+  .attach-pill-photo { background: rgba(91,155,213,.1); color: var(--info); border-color: rgba(91,155,213,.3); }
+  .attach-pill-atf   { background: rgba(200,169,110,.1); color: var(--accent); border-color: rgba(200,169,110,.3); }
+
+  /* ════════════════════════════════
+     MEDIA VIEWER MODAL
+  ════════════════════════════════ */
+  .viewer-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.92); z-index: 400;
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+  }
+  .viewer-overlay.open { display: flex; }
+
+  .viewer-img {
+    max-width: 90vw; max-height: 80vh;
+    border: 1px solid var(--border2); border-radius: 3px;
+    object-fit: contain;
+  }
+
+  .viewer-iframe {
+    width: 90vw; height: 82vh;
+    border: 1px solid var(--border2); border-radius: 3px;
+    background: #fff;
+  }
+
+  .viewer-toolbar {
+    display: flex; gap: 10px; align-items: center;
+  }
+
+  .viewer-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--muted); letter-spacing: 1px;
+  }
+
+  /* ════════════════════════════════
+     DOCUMENTS PAGE
+  ════════════════════════════════ */
+  .doc-category-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .5px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border: 1px solid;
+  }
+  .doc-cat-atf      { background: rgba(200,169,110,.12); color: var(--accent);  border-color: rgba(200,169,110,.3); }
+  .doc-cat-permit   { background: rgba(94,184,122,.12);  color: var(--success); border-color: rgba(94,184,122,.3); }
+  .doc-cat-trust    { background: rgba(91,155,213,.12);  color: var(--info);    border-color: rgba(91,155,213,.3); }
+  .doc-cat-purchase { background: rgba(212,137,58,.12);  color: var(--warning); border-color: rgba(212,137,58,.3); }
+  .doc-cat-insurance{ background: rgba(107,58,138,.12);  color: #a97ad4;        border-color: rgba(107,58,138,.3); }
+  .doc-cat-other    { background: rgba(90,90,100,.15);   color: var(--muted);   border-color: var(--border); }
+
+  .doc-file-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 2px;
+    border: 1px solid rgba(200,169,110,.3);
+    background: rgba(200,169,110,.08);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .doc-file-btn:hover { background: rgba(200,169,110,.18); border-color: var(--accent); }
+  .doc-file-btn.no-file { border-color: var(--border); background: transparent; color: var(--muted2); cursor: default; }
+
+  /* ════════════════════════════════
+     GEAR & ACCESSORIES
+  ════════════════════════════════ */
+  .gear-type-badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .5px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border: 1px solid;
+  }
+  .gear-magazine  { background: rgba(91,155,213,.12);  color: var(--info);    border-color: rgba(91,155,213,.3); }
+  .gear-barrel    { background: rgba(200,169,110,.12); color: var(--accent);  border-color: rgba(200,169,110,.3); }
+  .gear-optic     { background: rgba(94,184,122,.12);  color: var(--success); border-color: rgba(94,184,122,.3); }
+  .gear-trigger   { background: rgba(212,137,58,.12);  color: var(--warning); border-color: rgba(212,137,58,.3); }
+  .gear-stock     { background: rgba(200,169,110,.2);  color: var(--accent2); border-color: rgba(200,169,110,.4); }
+  .gear-light     { background: rgba(232,230,224,.08); color: var(--text);    border-color: rgba(232,230,224,.2); }
+  .gear-bipod     { background: rgba(107,58,138,.12);  color: #a97ad4;        border-color: rgba(107,58,138,.3); }
+  .gear-case      { background: rgba(90,90,100,.15);   color: var(--muted);   border-color: var(--border); }
+  .gear-cleaning  { background: rgba(94,184,122,.08);  color: #5eb87a88;      border-color: rgba(94,184,122,.2); }
+  .gear-other     { background: rgba(90,90,100,.1);    color: var(--muted2);  border-color: var(--border); }
+
+  .gear-cond-new  { color: var(--success); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .gear-cond-good { color: var(--accent);  font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .gear-cond-worn { color: var(--warning); font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+  .gear-cond-ret  { color: var(--danger);  font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+
+  /* ════════════════════════════════
+     RESPONSIVE
+  ════════════════════════════════ */
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    header, .nav-tabs, .controls, .table-wrap, .home-sections, .home-hero { padding-left: 1rem; padding-right: 1rem; }
+    .home-cards { grid-template-columns: 1fr 1fr; }
+    .hero-title { font-size: 42px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     HEADER
+══════════════════════════════════ -->
+<header>
+  <div class="logo" onclick="showPage('home')">
+    ARMORY <span class="logo-sub">// PERSONAL REGISTRY</span>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn btn-help" onclick="openHelp()" title="Glossary &amp; Reference">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help
+    </button>
+    <div class="header-actions" id="header-actions" style="display:flex;gap:10px;align-items:center">
+      <!-- populated by showPage() -->
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════
+     NAV TABS
+══════════════════════════════════ -->
+<nav class="nav-tabs">
+  <div class="nav-tab active" id="tab-home" onclick="showPage('home')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Home
+  </div>
+  <div class="nav-tab" id="tab-firearms" onclick="showPage('firearms')">
+    Firearms
+    <span class="nav-tab-badge" id="tab-badge-firearms">0</span>
+  </div>
+  <div class="nav-tab" id="tab-ammo" onclick="showPage('ammo')">
+    Ammunition
+    <span class="nav-tab-badge" id="tab-badge-ammo">0</span>
+  </div>
+  <div class="nav-tab" id="tab-docs" onclick="showPage('docs')">
+    Documents
+    <span class="nav-tab-badge" id="tab-badge-docs">0</span>
+  </div>
+  <div class="nav-tab" id="tab-gear" onclick="showPage('gear')">
+    Gear
+    <span class="nav-tab-badge" id="tab-badge-gear">0</span>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════
+     HOME PAGE
+══════════════════════════════════ -->
+<div class="page active" id="page-home">
+
+  <div class="home-hero">
+    <div class="hero-title">ARMORY</div>
+    <div class="hero-subtitle">Personal Firearms &amp; Ammunition Registry</div>
+    <div class="hero-divider"></div>
+    <div class="hero-date" id="hero-date"></div>
+  </div>
+
+  <div class="home-cards">
+    <div class="home-card" onclick="showPage('firearms')">
+      <div class="home-card-value" id="hc-total-firearms">0</div>
+      <div class="home-card-label">Total Firearms</div>
+      <div class="home-card-sub" id="hc-firearms-sub"></div>
+      <div class="home-card-nav">View Registry →</div>
+    </div>
+    <div class="home-card" onclick="showPage('firearms')">
+      <div class="home-card-value" id="hc-nfa">0</div>
+      <div class="home-card-label">NFA Items</div>
+      <div class="home-card-sub" id="hc-nfa-sub"></div>
+      <div class="home-card-nav">View Firearms →</div>
+    </div>
+    <div class="home-card" onclick="showPage('ammo')">
+      <div class="home-card-value" id="hc-rounds">0</div>
+      <div class="home-card-label">Total Rounds</div>
+      <div class="home-card-sub" id="hc-rounds-sub"></div>
+      <div class="home-card-nav">View Ammo →</div>
+    </div>
+    <div class="home-card" onclick="showPage('ammo')">
+      <div class="home-card-value" id="hc-ammo-value">$0</div>
+      <div class="home-card-label">Ammo Est. Value</div>
+      <div class="home-card-sub" id="hc-ammo-value-sub"></div>
+      <div class="home-card-nav">View Ammo →</div>
+    </div>
+    <div class="home-card" onclick="showPage('firearms')">
+      <div class="home-card-value" id="hc-nfa-pending">0</div>
+      <div class="home-card-label">NFA Pending</div>
+      <div class="home-card-sub">Forms not yet submitted</div>
+      <div class="home-card-nav">View Firearms →</div>
+    </div>
+    <div class="home-card" onclick="showPage('ammo')">
+      <div class="home-card-value" id="hc-low-stock">0</div>
+      <div class="home-card-label">Low / Out of Stock</div>
+      <div class="home-card-sub">Ammo below alert threshold</div>
+      <div class="home-card-nav">View Ammo →</div>
+    </div>
+  </div>
+
+  <div class="home-sections">
+    <div>
+      <div class="home-section-title">
+        NFA Items — Pending Submission
+        <a onclick="showPage('firearms')">View All →</a>
+      </div>
+      <div id="home-nfa-list"><div class="home-empty">No pending NFA items.</div></div>
+    </div>
+    <div>
+      <div class="home-section-title">
+        Ammo — Low / Out of Stock
+        <a onclick="showPage('ammo')">View All →</a>
+      </div>
+      <div id="home-ammo-alerts"><div class="home-empty">All ammo levels OK.</div></div>
+    </div>
+  </div>
+
+  <div style="padding:0 2rem 2rem">
+    <div class="home-section-title" style="margin-bottom:14px">
+      Caliber Coverage
+    </div>
+    <div id="home-caliber-grid" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════
+     FIREARMS PAGE
+══════════════════════════════════ -->
+<div class="page" id="page-firearms">
+
+  <div class="stats-bar" id="firearms-stats-bar"></div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="f-search" placeholder="Search make, model, serial, caliber…" oninput="renderFirearms()">
+    </div>
+    <select id="f-filter-type" onchange="renderFirearms()">
+      <option value="">All Types</option>
+      <option>Pistol</option><option>Rifle</option><option>Shotgun</option>
+      <option>SBR</option><option>SBS</option><option>Suppressor</option>
+      <option>Machine Gun</option><option>AOW</option><option>DD</option>
+    </select>
+    <select id="f-filter-nfa" onchange="renderFirearms()">
+      <option value="">All Items</option>
+      <option value="yes">NFA Items</option>
+      <option value="no">Non-NFA</option>
+    </select>
+    <select id="f-filter-submitted" onchange="renderFirearms()">
+      <option value="">Any Status</option>
+      <option value="approved">Approved</option>
+      <option value="pending">Submitted / Pending</option>
+      <option value="none">Not Submitted</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table id="firearms-table">
+      <thead>
+        <tr>
+          <th onclick="sortFirearms('color')">Color</th>
+          <th onclick="sortFirearms('manufacturer')">Manufacturer</th>
+          <th onclick="sortFirearms('model')">Model</th>
+          <th onclick="sortFirearms('serial')">Serial #</th>
+          <th onclick="sortFirearms('caliber')">Caliber</th>
+          <th onclick="sortFirearms('type')">Type</th>
+          <th onclick="sortFirearms('barrelLength')">Bbl (in)</th>
+          <th onclick="sortFirearms('overallLength')">OAL (in)</th>
+          <th onclick="sortFirearms('nfaStatus')">NFA Status</th>
+          <th onclick="sortFirearms('nfaOrderNum')">NFA Order #</th>
+          <th>Attachments</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="firearms-tbody"></tbody>
+    </table>
+    <div id="firearms-empty" class="empty-state" style="display:none">
+      <div class="es-icon">REGISTRY</div>
+      <div style="font-size:16px;font-weight:500;color:var(--muted)">No firearms in registry</div>
+      <p>Click <strong style="color:var(--accent)">+ Add Firearm</strong> to begin.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     AMMO PAGE
+══════════════════════════════════ -->
+<div class="page" id="page-ammo">
+
+  <div class="stats-bar" id="ammo-stats-bar"></div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="a-search" placeholder="Search caliber, brand, bullet type…" oninput="renderAmmo()">
+    </div>
+    <select id="a-filter-caliber" onchange="renderAmmo()"><option value="">All Calibers</option></select>
+    <select id="a-filter-type" onchange="renderAmmo()">
+      <option value="">All Bullet Types</option>
+      <option>FMJ</option><option>JHP</option><option>HP</option><option>SP</option>
+      <option>Match / OTM</option><option>Subsonic</option><option>Tracer</option>
+      <option>Frangible</option><option>Slug</option><option>Buckshot</option>
+      <option>Birdshot</option><option>Other</option>
+    </select>
+    <select id="a-filter-stock" onchange="renderAmmo()">
+      <option value="">All Stock Levels</option>
+      <option value="ok">In Stock</option>
+      <option value="low">Low Stock</option>
+      <option value="out">Out of Stock</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table id="ammo-table">
+      <thead>
+        <tr>
+          <th onclick="sortAmmo('caliber')">Caliber</th>
+          <th onclick="sortAmmo('brand')">Brand</th>
+          <th onclick="sortAmmo('bulletWeight')">Grain</th>
+          <th onclick="sortAmmo('bulletType')">Type</th>
+          <th onclick="sortAmmo('quantity')">Qty (rds)</th>
+          <th onclick="sortAmmo('roundsPerBox')">Rds/Box</th>
+          <th onclick="sortAmmo('totalPaid')">Total Paid</th>
+          <th onclick="sortAmmo('cprCalc')">CPR</th>
+          <th onclick="sortAmmo('location')">Location</th>
+          <th onclick="sortAmmo('lowStockThreshold')">Alert At</th>
+          <th onclick="sortAmmo('notes')">Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="ammo-tbody"></tbody>
+    </table>
+    <div id="ammo-empty" class="empty-state" style="display:none">
+      <div class="es-icon">AMMO</div>
+      <div style="font-size:16px;font-weight:500;color:var(--muted)">No ammunition in registry</div>
+      <p>Click <strong style="color:var(--accent)">+ Add Ammo</strong> to begin.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     DOCUMENTS PAGE
+══════════════════════════════════ -->
+<div class="page" id="page-docs">
+
+  <div class="stats-bar" id="docs-stats-bar"></div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="d-search" placeholder="Search name, category, notes…" oninput="renderDocs()">
+    </div>
+    <select id="d-filter-category" onchange="renderDocs()">
+      <option value="">All Categories</option>
+      <option value="Government / ATF">Government / ATF</option>
+      <option value="Permits & Licenses">Permits &amp; Licenses</option>
+      <option value="Trust Documents">Trust Documents</option>
+      <option value="Purchase Records">Purchase Records</option>
+      <option value="Insurance">Insurance</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table id="docs-table">
+      <thead>
+        <tr>
+          <th onclick="sortDocs('name')">Document Name</th>
+          <th onclick="sortDocs('category')">Category</th>
+          <th onclick="sortDocs('docDate')">Date</th>
+          <th onclick="sortDocs('notes')">Notes</th>
+          <th onclick="sortDocs('expiryDate')">Expires</th>
+          <th>File</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="docs-tbody"></tbody>
+    </table>
+    <div id="docs-empty" class="empty-state" style="display:none">
+      <div class="es-icon">VAULT</div>
+      <div style="font-size:16px;font-weight:500;color:var(--muted)">No documents in vault</div>
+      <p>Click <strong style="color:var(--accent)">+ Add Document</strong> to begin.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     DOCUMENT MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="docs-modal" onclick="if(event.target===this)closeDModal()">
+  <div class="modal" style="width:600px">
+    <div class="modal-header">
+      <div class="modal-title" id="dmodal-title">Add Document</div>
+      <button class="modal-close" onclick="closeDModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Document Name</label>
+          <input type="text" id="df-name" placeholder="e.g. Virginia CHP, UPIN Letter, NFA Trust Instrument">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="df-category">
+            <option value="">Select category…</option>
+            <option value="Government / ATF">Government / ATF</option>
+            <option value="Permits & Licenses">Permits &amp; Licenses</option>
+            <option value="Trust Documents">Trust Documents</option>
+            <option value="Purchase Records">Purchase Records</option>
+            <option value="Insurance">Insurance</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Document Date</label>
+          <input type="date" id="df-date">
+        </div>
+        <div class="form-group">
+          <label>Expiry Date <span style="color:var(--muted2);font-size:10px">(optional)</span></label>
+          <input type="date" id="df-expiry">
+          <span class="hint">Use for CHP renewals, insurance policies, etc.</span>
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <input type="text" id="df-notes" placeholder="e.g. Issued by Stafford County Circuit Court, expires 2030">
+        </div>
+      </div>
+
+      <div class="form-section-label" style="margin-top:18px">File Attachment</div>
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-top:4px">
+        <div class="attach-slot" id="doc-slot" onclick="triggerDocFile()" style="width:160px;flex-shrink:0">
+          <svg class="attach-slot-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span class="attach-slot-label">Click to attach PDF or image</span>
+          <span class="attach-slot-name" id="doc-slot-name" style="display:none"></span>
+          <div class="attach-slot-overlay">
+            <button class="attach-overlay-btn" onclick="event.stopPropagation();triggerDocFile()">Replace</button>
+            <button class="attach-overlay-btn remove" onclick="event.stopPropagation();clearDocSlot()">Remove</button>
+          </div>
+        </div>
+        <div style="flex:1;padding-top:4px">
+          <span class="hint" style="display:block;margin-bottom:8px">Accepts PDF, JPG, PNG, HEIC. Stored locally in IndexedDB — never leaves your device.</span>
+          <span class="hint">Recommended: scan or photograph the document at full resolution for legibility.</span>
+        </div>
+      </div>
+      <input type="file" id="df-file" accept="image/*,.pdf,application/pdf" style="display:none" onchange="handleDocFile(this)">
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeDModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDoc()">Save Document</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     GEAR & ACCESSORIES PAGE
+══════════════════════════════════ -->
+<div class="page" id="page-gear">
+
+  <div class="stats-bar" id="gear-stats-bar"></div>
+
+  <div class="controls">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="g-search" placeholder="Search type, manufacturer, model, caliber…" oninput="renderGear()">
+    </div>
+    <select id="g-filter-type" onchange="renderGear()">
+      <option value="">All Types</option>
+      <option>Magazine</option>
+      <option>Barrel</option>
+      <option>Optic</option>
+      <option>Trigger</option>
+      <option>Stock / Brace</option>
+      <option>Light / Laser</option>
+      <option>Bipod / Tripod</option>
+      <option>Case / Bag</option>
+      <option>Cleaning</option>
+      <option>Other</option>
+    </select>
+    <select id="g-filter-condition" onchange="renderGear()">
+      <option value="">All Conditions</option>
+      <option value="New">New</option>
+      <option value="Good">Good</option>
+      <option value="Worn">Worn</option>
+      <option value="Retire">Retire</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table id="gear-table">
+      <thead>
+        <tr>
+          <th onclick="sortGear('gearType')">Type</th>
+          <th onclick="sortGear('manufacturer')">Manufacturer</th>
+          <th onclick="sortGear('model')">Model</th>
+          <th onclick="sortGear('caliber')">Caliber / Spec</th>
+          <th onclick="sortGear('quantity')">Qty</th>
+          <th onclick="sortGear('condition')">Condition</th>
+          <th onclick="sortGear('compatFirearm')">Compatible Firearm</th>
+          <th onclick="sortGear('location')">Location</th>
+          <th onclick="sortGear('notes')">Notes</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="gear-tbody"></tbody>
+    </table>
+    <div id="gear-empty" class="empty-state" style="display:none">
+      <div class="es-icon">GEAR</div>
+      <div style="font-size:16px;font-weight:500;color:var(--muted)">No gear in inventory</div>
+      <p>Click <strong style="color:var(--accent)">+ Add Gear</strong> to begin.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     GEAR MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="gear-modal" onclick="if(event.target===this)closeGModal()">
+  <div class="modal" style="width:660px">
+    <div class="modal-header">
+      <div class="modal-title" id="gmodal-title">Add Gear</div>
+      <button class="modal-close" onclick="closeGModal()">×</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="form-section-label">Identification</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Type</label>
+          <select id="gf-type" onchange="updateGearFields()">
+            <option value="">Select type…</option>
+            <option>Magazine</option>
+            <option>Barrel</option>
+            <option>Optic</option>
+            <option>Trigger</option>
+            <option>Stock / Brace</option>
+            <option>Light / Laser</option>
+            <option>Bipod / Tripod</option>
+            <option>Case / Bag</option>
+            <option>Cleaning</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Manufacturer</label>
+          <input type="text" id="gf-manufacturer" placeholder="e.g. Magpul, Geissele, Vortex">
+        </div>
+        <div class="form-group">
+          <label>Model / Name</label>
+          <input type="text" id="gf-model" placeholder="e.g. PMAG Gen3 M3, SSA-E, Razor HD Gen III">
+        </div>
+        <div class="form-group">
+          <label id="gf-spec-label">Caliber / Spec</label>
+          <input type="text" id="gf-caliber" placeholder="e.g. 5.56, 1:8 twist, 1-6x24">
+        </div>
+      </div>
+
+      <!-- Type-specific fields (shown/hidden by JS) -->
+      <div id="gear-mag-fields" style="display:none">
+        <div class="form-section-label">Magazine Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Capacity (rounds)</label>
+            <input type="number" id="gf-capacity" placeholder="e.g. 30" min="1" step="1">
+          </div>
+          <div class="form-group">
+            <label>Generation / Variant</label>
+            <input type="text" id="gf-variant" placeholder="e.g. Gen3, Window, 20rd">
+          </div>
+        </div>
+      </div>
+
+      <div id="gear-barrel-fields" style="display:none">
+        <div class="form-section-label">Barrel Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Length (inches)</label>
+            <input type="number" id="gf-barrel-length" placeholder="e.g. 16" step="0.25" min="0">
+          </div>
+          <div class="form-group">
+            <label>Profile</label>
+            <select id="gf-profile">
+              <option value="">Select…</option>
+              <option>Government / M4</option>
+              <option>Pencil</option>
+              <option>Mid-weight</option>
+              <option>Heavy / HBAR</option>
+              <option>Bull</option>
+              <option>Fluted</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Twist Rate</label>
+            <input type="text" id="gf-twist" placeholder="e.g. 1:8">
+          </div>
+          <div class="form-group">
+            <label>Threading</label>
+            <input type="text" id="gf-threading" placeholder="e.g. 1/2-28, 5/8-24">
+          </div>
+        </div>
+      </div>
+
+      <div id="gear-optic-fields" style="display:none">
+        <div class="form-section-label">Optic Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Magnification</label>
+            <input type="text" id="gf-magnification" placeholder="e.g. 1-6x24, 4-16x50, 1x">
+          </div>
+          <div class="form-group">
+            <label>Reticle</label>
+            <input type="text" id="gf-reticle" placeholder="e.g. EBR-2C, MIL-R, BDC">
+          </div>
+          <div class="form-group">
+            <label>Mount Type</label>
+            <input type="text" id="gf-mount" placeholder="e.g. Pic rail, 34mm rings, QD">
+          </div>
+          <div class="form-group">
+            <label>Zero Distance</label>
+            <input type="text" id="gf-zero" placeholder="e.g. 100 yds, 50/200">
+          </div>
+        </div>
+      </div>
+
+      <div id="gear-trigger-fields" style="display:none">
+        <div class="form-section-label">Trigger Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Pull Weight</label>
+            <input type="text" id="gf-pull" placeholder="e.g. 3.5 lbs, 2-stage">
+          </div>
+          <div class="form-group">
+            <label>Platform</label>
+            <input type="text" id="gf-platform" placeholder="e.g. AR-15, AR-10, Rem 700">
+          </div>
+        </div>
+      </div>
+
+      <div id="gear-light-fields" style="display:none">
+        <div class="form-section-label">Light / Laser Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Output</label>
+            <input type="text" id="gf-lumens" placeholder="e.g. 1000 lm, IR 850nm">
+          </div>
+          <div class="form-group">
+            <label>Battery</label>
+            <input type="text" id="gf-battery" placeholder="e.g. CR123, 18650">
+          </div>
+          <div class="form-group">
+            <label>Mount / Rail</label>
+            <input type="text" id="gf-rail" placeholder="e.g. Pic, M-LOK, 1in">
+          </div>
+          <div class="form-group">
+            <label>Pressure Switch</label>
+            <input type="text" id="gf-switch" placeholder="e.g. Surefire ST, no">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section-label">Inventory</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" id="gf-quantity" placeholder="e.g. 10" min="0" step="1" value="1">
+        </div>
+        <div class="form-group">
+          <label>Condition</label>
+          <select id="gf-condition">
+            <option value="New">New</option>
+            <option value="Good">Good</option>
+            <option value="Worn">Worn</option>
+            <option value="Retire">Retire — needs replacement</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Compatible Firearm(s)</label>
+          <input type="text" id="gf-compat" placeholder="e.g. Aero M4E1 SBR, All 5.56 lowers">
+        </div>
+        <div class="form-group">
+          <label>Storage Location</label>
+          <input type="text" id="gf-location" placeholder="e.g. Safe A, Range Bag">
+        </div>
+        <div class="form-group full">
+          <label>Notes</label>
+          <input type="text" id="gf-notes" placeholder="e.g. Needs anti-tilt follower, zero verified at 100yds">
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeGModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGear()">Save Gear</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     MEDIA VIEWER
+══════════════════════════════════ -->
+<div class="viewer-overlay" id="viewer-overlay" onclick="if(event.target===this)closeViewer()">
+  <div class="viewer-toolbar">
+    <span class="viewer-label" id="viewer-label"></span>
+    <a id="viewer-download" class="btn btn-sm" download>Download</a>
+    <button class="btn btn-sm" onclick="closeViewer()">Close</button>
+  </div>
+  <img class="viewer-img" id="viewer-img" src="" alt="" style="display:none">
+  <iframe class="viewer-iframe" id="viewer-iframe" src="" style="display:none"></iframe>
+</div>
+
+<!-- ══════════════════════════════════
+     HELP / GLOSSARY MODAL
+══════════════════════════════════ -->
+<div class="help-modal-overlay" id="help-modal" onclick="if(event.target===this)closeHelp()">
+  <div class="help-modal">
+    <div class="help-modal-header">
+      <div class="help-modal-title">Glossary &amp; Reference</div>
+      <button class="modal-close" onclick="closeHelp()">×</button>
+    </div>
+    <div class="help-modal-body">
+
+      <div class="help-section">
+        <div class="help-section-title">NFA Firearm Types</div>
+        <div class="help-note">
+          <strong>NFA</strong> — National Firearms Act (1934). Regulates the manufacture, transfer, and possession of certain firearms. Each NFA item requires a $200 tax stamp, ATF Form 4 (transfer) or Form 1 (make), and a background check. Wait times currently run 6–12+ months for Form 4.
+        </div>
+        <div style="height:14px"></div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">SBR</div>
+            <div class="help-def">Short-Barreled Rifle — a rifle with a barrel under 16" or overall length under 26". Requires NFA registration. A pistol-configuration AR with a brace is not automatically an SBR, but adding a stock converts it to one.<em>e.g. 10.3" Daniel Defense MK18, 11.5" BCM upper on registered lower</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">SBS</div>
+            <div class="help-def">Short-Barreled Shotgun — a shotgun with a barrel under 18" or overall length under 26". Same NFA process as SBR.<em>e.g. Mossberg 590 cut to 14", Remington 870 TAC-14 configured as SBS</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Suppressor</div>
+            <div class="help-def">Also called a silencer. A device that reduces the report of a firearm. NFA-regulated regardless of the host firearm's classification. Form 1 (DIY) or Form 4 (commercial transfer).<em>e.g. SilencerCo Scythe-Ti, OCL Hydrogen-S 6.5mm</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">AOW</div>
+            <div class="help-def">Any Other Weapon — a catch-all NFA category for firearms that don't fit other definitions: pen guns, cane guns, pistols with a vertical foregrip, smooth-bore pistols, and certain concealable firearms. Transfer tax is only $5 (vs $200 for other NFA items).<em>e.g. H&amp;R Handy-Gun, smoothbore AR pistol with VFG</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">DD</div>
+            <div class="help-def">Destructive Device — two categories: (1) explosive devices such as grenades, rockets, and mines; (2) large-bore firearms with a bore diameter exceeding 0.50 caliber not classified as sporting shotguns. $200 tax stamp.<em>e.g. 37mm/40mm launcher (as DD), anti-tank rifles</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">MG</div>
+            <div class="help-def">Machine Gun — any firearm that fires more than one round per trigger pull, or any part designed to convert a semi-auto to full-auto. Civilian transfer of post-May-1986 MGs is prohibited (Hughes Amendment). Pre-1986 registered MGs are transferable but extremely expensive.<em>e.g. Pre-86 M16, registered Lightning Link, DIAS</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Non-NFA Firearm Types</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">Pistol</div>
+            <div class="help-def">A handgun designed to be fired with one hand. Barrel length is not regulated at the federal level for pistols. A firearm originally manufactured as a pistol can have a brace without NFA implications.<em>e.g. Glock 17, 1911, AR-15 pistol configuration</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Rifle</div>
+            <div class="help-def">A long gun with a rifled barrel of 16" or more and overall length of 26" or more, designed to be fired from the shoulder. No NFA paperwork required as long as it stays in spec.<em>e.g. AR-15 with 16" barrel, bolt-action precision rifle</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Shotgun</div>
+            <div class="help-def">A smoothbore long gun with a barrel of 18" or more and overall length of 26" or more, designed to be fired from the shoulder. Rifled-barrel shotguns firing slugs are also common.<em>e.g. Mossberg 500, Remington 870, Benelli M4</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">NFA Process &amp; Form Fields</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">Form 1</div>
+            <div class="help-def">ATF form to make an NFA item yourself (e.g. converting a pistol lower to an SBR, or building a suppressor). Must be approved before manufacturing begins.<em>Used for: SBR, SBS, Suppressor (DIY)</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Form 4</div>
+            <div class="help-def">ATF form to transfer an existing NFA item from a dealer or individual to you. The $200 tax stamp is paid at the time of submission. The item stays with the transferor until approved.<em>Used for: all NFA transfers from FFL/SOT or individual</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">UPIN</div>
+            <div class="help-def">Unique Personal Identification Number — issued by the FBI through the NICS Voluntary Appeal File (VAF) program. Allows you to include your UPIN on a Form 4473 to expedite NICS checks and reduce the chance of a delay or denial due to a false-positive match.<em>Relevant for NFA transfers and FFL purchases</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">NFA Order #</div>
+            <div class="help-def">The tracking or order number assigned by your dealer or trust for a pending NFA transfer. Not an ATF-assigned number — it's your FFL/SOT's internal reference used to track where your Form 4 is in the queue.<em>Format varies by dealer</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">NFA Status</div>
+            <div class="help-def">Three-state field tracking where an NFA item is in the approval process. <strong style="color:var(--muted)">Not Submitted</strong> means paperwork not yet filed. <strong style="color:var(--warning)">Submitted / Pending</strong> means the ATF Form 1 or Form 4 has been filed and you are waiting on approval. <strong style="color:var(--success)">Approved</strong> means the tax stamp has been received and the item is legal to possess. The home dashboard "NFA Pending" count reflects all items not yet approved.<em>Items approved drop off the NFA Pending list on the home screen</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Gun Trust</div>
+            <div class="help-def">A legal trust (NFA trust) used to hold NFA items. Allows named co-trustees to possess items without the primary owner present. Avoids the CLEO signature requirement for individual transfers in some jurisdictions.<em>Trustees must be listed on Form 4 / Form 1</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Photos, Documents &amp; Storage</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">Photo 1 &amp; 2</div>
+            <div class="help-def">Up to two photographs per firearm. Accepts any image format (JPG, PNG, HEIC, etc.). Thumbnails display in the attachment slot. Recommended uses: overall condition at time of purchase, serial number close-up, engraving documentation for NFA items.<em>Click the pill in the table row to view; click the slot overlay to replace or remove</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">ATF Form</div>
+            <div class="help-def">Attach the approved ATF Form 1 or Form 4 for NFA items. Accepts PDF (recommended) or image scan. Having the approved form digitally accessible is useful when transporting NFA items and for trust documentation purposes.<em>Accepts: PDF, JPG, PNG — click ATF pill in table to view inline</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">IndexedDB</div>
+            <div class="help-def">The storage engine used by this app. Unlike localStorage (5–10 MB limit), IndexedDB can store binary files like photos and PDFs with a limit tied to available disk space — typically gigabytes. All data stays on your device and is never transmitted anywhere.<em>Data persists across browser sessions; clear browser site data to reset</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Backup</div>
+            <div class="help-def">Use Export CSV regularly to back up your firearm and ammo records as text data. Note that CSV export does not include photos or ATF form attachments — those live only in IndexedDB. To back up attachments, use the Download button in the media viewer to save files locally.<em>Recommended: export CSV monthly and after any major changes</em></div>
+          </div>
+        </div>
+        <div class="help-note">
+          <strong>Important:</strong> Clearing your browser's site data, cookies, or storage for this app's origin (e.g. localhost:8080) will permanently delete all records and attachments from IndexedDB. Always keep external backups via CSV export and downloaded attachment files.
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Gear &amp; Accessories</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">Magazine</div>
+            <div class="help-def">Track caliber, capacity, manufacturer, model, quantity on hand, and which firearm(s) they're compatible with. Condition field flags mags that need replacement. Retire condition is highlighted in red.<em>e.g. Magpul PMAG Gen3 30rd 5.56, Lancer AWM 20rd 6.5 CM</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Barrel</div>
+            <div class="help-def">Records length, twist rate, profile (government, pencil, heavy, bull), threading, and caliber. Useful when building or swapping uppers across multiple lowers.<em>e.g. 18" 22 ARC 1:7.7 mid-length, 10.3" 5.56 gov 1:7</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Optic</div>
+            <div class="help-def">Tracks magnification range, reticle type, mount type, and recorded zero distance. Compatible firearm field links the optic to the specific host it's mounted on.<em>e.g. Vortex Razor HD Gen III 1-10x24 EBR-7C, Sig Romeo5</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Trigger</div>
+            <div class="help-def">Records pull weight, type (single-stage / two-stage), and compatible platform. Useful for tracking drop-in cassettes across multiple lowers.<em>e.g. Geissele SSA-E 2-stage ~3.5lb, LaRue MBT-2S</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Light / Laser</div>
+            <div class="help-def">Tracks output (lumens or IR wavelength), battery type, mount/rail system, and pressure switch model. Battery field helps ensure you stock the right cells.<em>e.g. Surefire M300V 500lm CR123, Mawl-C1+ IR 850nm</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Condition</div>
+            <div class="help-def">Four states: New (unused), Good (serviceable), Worn (functional but degraded), and Retire (needs replacement). The stats bar tracks "Needs Replacement" count. Use Retire to flag magazines with cracked feed lips, springs, or worn followers.<em>Retire count shown in stats bar with amber warning</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Documents Vault</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">Government / ATF</div>
+            <div class="help-def">UPIN letter from the FBI NICS VAF program, approved ATF Form 4 tax stamps, approved ATF Form 1s, and any other federal correspondence related to your firearms or NFA items.<em>e.g. UPIN letter, approved Form 4 for suppressor</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Permits &amp; Licenses</div>
+            <div class="help-def">Virginia Concealed Handgun Permit (CHP) and any other state-issued carry or ownership permits. Photograph or scan the card. The expiry date field will flag permits expiring within 90 days.<em>e.g. Virginia CHP, out-of-state non-resident permits</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Trust Documents</div>
+            <div class="help-def">The NFA gun trust legal instrument, any trust amendments, and letters acknowledging trustee additions or removals. Keeping a digital copy ensures Michelle as successor trustee can access the document if needed.<em>e.g. Trust instrument, amendment adding co-trustee</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Purchase Records</div>
+            <div class="help-def">Dealer invoices and sales receipts from FFL transfers. Note: the ATF Form 4473 stays with the FFL and is not a document you possess. However your dealer's own receipt or invoice is yours to keep.<em>e.g. Dealer invoice, online retailer order confirmation</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Insurance</div>
+            <div class="help-def">Firearms insurance policy documents, appraisal certificates for high-value items, and scheduled item riders. The expiry date field is useful for tracking annual policy renewals.<em>e.g. NRA Carry Guard policy, scheduled item appraisal</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Expiry Alerts</div>
+            <div class="help-def">Documents with an expiry date set will be flagged in the table. ⚡ means expiring within 90 days; ⚠ means already expired. The stats bar shows counts for both. Use this for CHP renewals and insurance policy renewals.<em>CHP: valid 5 years in Virginia; renew 90 days before expiry</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Ammunition Bullet Types</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">FMJ</div>
+            <div class="help-def">Full Metal Jacket — lead core enclosed in a harder metal (usually copper) jacket. Does not expand on impact. Standard range/training ammo. Generally cheaper per round.<em>Best for: range practice, training, semi-auto reliability</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">JHP</div>
+            <div class="help-def">Jacketed Hollow Point — a jacketed bullet with a cavity in the tip that causes it to expand on impact, increasing the wound channel and reducing over-penetration risk. Standard defensive ammo.<em>Best for: self-defense, home defense, carry</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">HP</div>
+            <div class="help-def">Hollow Point — same expansion concept as JHP but may lack a full jacket. Common in rimfire (.22 LR) and some pistol loads.<em>Best for: small game, defensive rimfire loads</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">SP</div>
+            <div class="help-def">Soft Point — a jacketed bullet with an exposed lead tip. Expands more than FMJ but less aggressively than a hollow point. Common in hunting rifle rounds.<em>Best for: hunting, medium/large game</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Match / OTM</div>
+            <div class="help-def">Open-Tip Match — a precision bullet where the tip is open due to manufacturing (drawing from the base), not for expansion. Optimized for consistent ballistic performance and accuracy at range.<em>Best for: precision rifle, long-range competition</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Subsonic</div>
+            <div class="help-def">Ammunition loaded to keep the projectile below the speed of sound (~1,125 fps). Eliminates the supersonic crack, making it significantly quieter when used with a suppressor.<em>Best for: suppressed hosts, especially .300 BLK and 9mm</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">Frangible</div>
+            <div class="help-def">Bullets designed to disintegrate on impact with a hard surface. Reduces ricochet risk and lead contamination. Common for steel target shooting at close range and indoor ranges.<em>Best for: close-range steel, indoor ranges</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">CPR</div>
+            <div class="help-def">Cost Per Round — calculated automatically. Enter <strong style="color:var(--muted)">Total Paid</strong> and <strong style="color:var(--muted)">Total Rounds Purchased</strong> for bulk buys (e.g. $500 for 1,000 rounds = $0.500/rd). No need to break it down by box. Rounds Per Box is optional and only used for the box count display and +/− button step size. For legacy records with Price Per Box entered, CPR falls back to Price ÷ Rds/Box.<em>Adjust By field lets you set a custom +/− step — e.g. 50 rds per range session</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">Firearm Measurements</div>
+        <div class="help-grid">
+          <div class="help-entry">
+            <div class="help-term">Bbl (in)</div>
+            <div class="help-def">Barrel Length in inches — measured from the bolt face (chamber) to the muzzle. Critical for NFA compliance: rifles must be 16"+ and shotguns 18"+ to stay non-NFA. Measured with the action closed.<em>Legal minimums: Rifle 16", Shotgun 18"</em></div>
+          </div>
+          <div class="help-entry">
+            <div class="help-term">OAL (in)</div>
+            <div class="help-def">Overall Length in inches — total length of the firearm from end to end with the stock fully extended. Secondary NFA threshold: long guns under 26" OAL may be classified as SBR/SBS regardless of barrel length.<em>Legal minimum for non-NFA long gun: 26"</em></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FIREARMS MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="firearms-modal" onclick="if(event.target===this)closeFModal()">
+  <div class="modal" style="width:680px">
+    <div class="modal-header">
+      <div class="modal-title" id="fmodal-title">Add Firearm</div>
+      <button class="modal-close" onclick="closeFModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Color</label><input type="text" id="ff-color" placeholder="e.g. FDE, Black, OD Green"></div>
+        <div class="form-group"><label>Manufacturer</label><input type="text" id="ff-manufacturer" placeholder="e.g. Aero Precision"></div>
+        <div class="form-group"><label>Model</label><input type="text" id="ff-model" placeholder="e.g. M4E1"></div>
+        <div class="form-group"><label>Serial #</label><input type="text" id="ff-serial" placeholder="e.g. AP12345678" style="font-family:'IBM Plex Mono',monospace"></div>
+        <div class="form-group"><label>Caliber</label><input type="text" id="ff-caliber" placeholder="e.g. 5.56x45mm NATO"></div>
+        <div class="form-group">
+          <label>Type</label>
+          <select id="ff-type">
+            <option value="">Select type…</option>
+            <option>Pistol</option><option>Rifle</option><option>Shotgun</option>
+            <option>SBR</option><option>SBS</option><option>Suppressor</option>
+            <option>Machine Gun</option><option>AOW</option><option>DD</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Barrel Length (inches)</label><input type="number" id="ff-barrel" placeholder="e.g. 16" step="0.1" min="0"></div>
+        <div class="form-group"><label>Overall Length (inches)</label><input type="number" id="ff-oal" placeholder="e.g. 35.5" step="0.1" min="0"></div>
+        <div class="form-group full"><label>NFA Order #</label><input type="text" id="ff-nfa-order" placeholder="e.g. 20250301-XXXXX" style="font-family:'IBM Plex Mono',monospace"></div>
+        <div class="form-group full">
+          <label>NFA Form Status</label>
+          <select id="ff-nfa-status">
+            <option value="none">Not Submitted</option>
+            <option value="pending">Submitted / Pending</option>
+            <option value="approved">Approved</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">Photos &amp; Documents</div>
+      <div class="attach-grid">
+
+        <!-- Photo 1 -->
+        <div>
+          <label style="margin-bottom:6px;display:block">Photo 1</label>
+          <div class="attach-slot" id="slot-photo1" onclick="triggerFileInput('ff-file-photo1')">
+            <svg class="attach-slot-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span class="attach-slot-label">Click to attach photo</span>
+            <span class="attach-slot-name" id="slot-photo1-name" style="display:none"></span>
+            <div class="attach-slot-overlay">
+              <button class="attach-overlay-btn" onclick="event.stopPropagation();triggerFileInput('ff-file-photo1')">Replace</button>
+              <button class="attach-overlay-btn remove" onclick="event.stopPropagation();clearSlot('photo1')">Remove</button>
+            </div>
+          </div>
+          <input type="file" id="ff-file-photo1" accept="image/*" style="display:none" onchange="handleFileSelect(this,'photo1')">
+        </div>
+
+        <!-- Photo 2 -->
+        <div>
+          <label style="margin-bottom:6px;display:block">Photo 2</label>
+          <div class="attach-slot" id="slot-photo2" onclick="triggerFileInput('ff-file-photo2')">
+            <svg class="attach-slot-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span class="attach-slot-label">Click to attach photo</span>
+            <span class="attach-slot-name" id="slot-photo2-name" style="display:none"></span>
+            <div class="attach-slot-overlay">
+              <button class="attach-overlay-btn" onclick="event.stopPropagation();triggerFileInput('ff-file-photo2')">Replace</button>
+              <button class="attach-overlay-btn remove" onclick="event.stopPropagation();clearSlot('photo2')">Remove</button>
+            </div>
+          </div>
+          <input type="file" id="ff-file-photo2" accept="image/*" style="display:none" onchange="handleFileSelect(this,'photo2')">
+        </div>
+
+        <!-- ATF Form -->
+        <div>
+          <label style="margin-bottom:6px;display:block">ATF Form 1 / Form 4</label>
+          <div class="attach-slot" id="slot-atf_form" onclick="triggerFileInput('ff-file-atf_form')">
+            <svg class="attach-slot-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span class="attach-slot-label">Click to attach PDF or image</span>
+            <span class="attach-slot-name" id="slot-atf_form-name" style="display:none"></span>
+            <div class="attach-slot-overlay">
+              <button class="attach-overlay-btn" onclick="event.stopPropagation();triggerFileInput('ff-file-atf_form')">Replace</button>
+              <button class="attach-overlay-btn remove" onclick="event.stopPropagation();clearSlot('atf_form')">Remove</button>
+            </div>
+          </div>
+          <input type="file" id="ff-file-atf_form" accept="image/*,.pdf,application/pdf" style="display:none" onchange="handleFileSelect(this,'atf_form')">
+        </div>
+
+      </div>
+      <div style="margin-top:8px">
+        <span class="hint">Photos and ATF forms are stored locally in your browser's IndexedDB. They never leave your device.</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeFModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFirearm()">Save Firearm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     AMMO MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="ammo-modal" onclick="if(event.target===this)closeAModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="amodal-title">Add Ammunition</div>
+      <button class="modal-close" onclick="closeAModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-section-label">Identification</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Caliber / Gauge</label><input type="text" id="af-caliber" placeholder="e.g. 5.56x45mm NATO"></div>
+        <div class="form-group"><label>Brand / Manufacturer</label><input type="text" id="af-brand" placeholder="e.g. Federal, Hornady"></div>
+        <div class="form-group"><label>Product Name / SKU</label><input type="text" id="af-product" placeholder="e.g. Gold Dot, M193"></div>
+        <div class="form-group">
+          <label>Bullet Type</label>
+          <select id="af-type">
+            <option value="">Select…</option>
+            <option>FMJ</option><option>JHP</option><option>HP</option><option>SP</option>
+            <option>Match / OTM</option><option>Subsonic</option><option>Tracer</option>
+            <option>Frangible</option><option>Slug</option><option>Buckshot</option>
+            <option>Birdshot</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Bullet Weight (gr)</label><input type="number" id="af-grain" placeholder="e.g. 55" step="0.5" min="0"></div>
+        <div class="form-group"><label>Muzzle Velocity (fps)</label><input type="number" id="af-velocity" placeholder="e.g. 3165" step="1" min="0"></div>
+      </div>
+      <div class="form-section-label">Inventory</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Quantity on Hand (rounds)</label><input type="number" id="af-qty" placeholder="e.g. 1000" step="1" min="0"></div>
+        <div class="form-group">
+          <label>Total Paid ($)</label>
+          <input type="number" id="af-total-paid" placeholder="e.g. 500.00" step="0.01" min="0">
+          <span class="hint">What you paid for the whole purchase</span>
+        </div>
+        <div class="form-group">
+          <label>Total Rounds Purchased</label>
+          <input type="number" id="af-total-rounds" placeholder="e.g. 1000" step="1" min="1">
+          <span class="hint">Used to calculate CPR — can differ from qty on hand</span>
+        </div>
+        <div class="form-group">
+          <label>Rounds Per Box <span style="color:var(--muted2);font-size:10px">(optional)</span></label>
+          <input type="number" id="af-rpb" placeholder="e.g. 20" step="1" min="1">
+          <span class="hint">Used for box count display</span>
+        </div>
+        <div class="form-group">
+          <label>Adjust By (rounds) <span style="color:var(--muted2);font-size:10px">(optional)</span></label>
+          <input type="number" id="af-adjustby" placeholder="e.g. 50" step="1" min="1">
+          <span class="hint">+/− button step — defaults to Rds/Box or 1</span>
+        </div>
+        <div class="form-group">
+          <label>Low Stock Alert (rounds)</label>
+          <input type="number" id="af-alert" placeholder="e.g. 200" step="1" min="0">
+          <span class="hint">Row highlights when qty falls below this</span>
+        </div>
+      </div>
+      <div class="form-section-label">Storage</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Storage Location</label><input type="text" id="af-location" placeholder="e.g. Safe A, Ammo Can #2"></div>
+        <div class="form-group"><label>Lot / Date Code</label><input type="text" id="af-lot" placeholder="e.g. L23H4 / 2024-Q3" style="font-family:'IBM Plex Mono',monospace"></div>
+        <div class="form-group full"><label>Notes</label><input type="text" id="af-notes" placeholder="e.g. subsonic for suppressor use"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAmmo()">Save Ammunition</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SCRIPT
+══════════════════════════════════ -->
+<script>
+/* ═══════════════════════════
+   INDEXEDDB DATA LAYER
+═══════════════════════════ */
+const DB_NAME = 'armory_db', DB_VER = 3;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('firearms')) d.createObjectStore('firearms', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('ammo'))     d.createObjectStore('ammo',     { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('media'))    d.createObjectStore('media',    { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('documents'))d.createObjectStore('documents',{ keyPath: 'id' });
+      if (!d.objectStoreNames.contains('docfiles')) d.createObjectStore('docfiles', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('gear'))     d.createObjectStore('gear',     { keyPath: 'id' });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(db); };
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function dbGetAll(store) {
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function dbPut(store, obj) {
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).put(obj);
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function dbDelete(store, id) {
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function dbGet(store, id) {
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(id);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+// Media helpers — store blobs keyed as "firearmId_type_index"
+// type: 'photo1','photo2','atf_form'
+async function saveMedia(firearmId, type, file) {
+  const id  = `${firearmId}_${type}`;
+  const buf = await file.arrayBuffer();
+  await dbPut('media', { id, firearmId, type, name: file.name, mime: file.type, data: buf });
+}
+
+async function deleteMediaForFirearm(firearmId) {
+  const all = await dbGetAll('media');
+  for (const m of all.filter(m => m.firearmId === firearmId)) await dbDelete('media', m.id);
+}
+
+async function getMedia(firearmId, type) {
+  return dbGet('media', `${firearmId}_${type}`);
+}
+
+async function getMediaSummary(firearmId) {
+  const all = await dbGetAll('media');
+  const mine = all.filter(m => m.firearmId === firearmId);
+  return { photo1: mine.find(m=>m.type==='photo1'), photo2: mine.find(m=>m.type==='photo2'), atf_form: mine.find(m=>m.type==='atf_form') };
+}
+
+// Migrate existing localStorage data into IndexedDB on first run
+async function migrateFromLocalStorage() {
+  const fLS = localStorage.getItem('armory_v1');
+  const aLS = localStorage.getItem('ammo_v1');
+  if (fLS) {
+    const parsed = JSON.parse(fLS) || [];
+    for (const f of parsed) await dbPut('firearms', f);
+    localStorage.removeItem('armory_v1');
+    console.log(`Migrated ${parsed.length} firearms from localStorage to IndexedDB.`);
+  }
+  if (aLS) {
+    const parsed = JSON.parse(aLS) || [];
+    for (const a of parsed) await dbPut('ammo', a);
+    localStorage.removeItem('ammo_v1');
+    console.log(`Migrated ${parsed.length} ammo entries from localStorage to IndexedDB.`);
+  }
+}
+
+let firearms = [];
+let ammo     = [];
+let docs     = [];
+let gear     = [];
+
+async function loadAll() {
+  await migrateFromLocalStorage();
+  firearms = await dbGetAll('firearms');
+  ammo     = await dbGetAll('ammo');
+  docs     = await dbGetAll('documents');
+  gear     = await dbGetAll('gear');
+}
+
+let fEditId = null, aEditId = null;
+let fSortCol = 'manufacturer', fSortDir = 'asc';
+let aSortCol = 'caliber',      aSortDir = 'asc';
+
+/* ═══════════════════════════
+   NAV / PAGE
+═══════════════════════════ */
+let currentPage = 'home';
+
+function showPage(page) {
+  currentPage = page;
+  ['home','firearms','ammo','docs','gear'].forEach(p => {
+    document.getElementById('page-' + p).classList.toggle('active', p === page);
+    document.getElementById('tab-' + p).classList.toggle('active', p === page);
+  });
+
+  const ha = document.getElementById('header-actions');
+  if (page === 'home') {
+    ha.innerHTML = `
+      <button class="btn" onclick="showPage('firearms')">Firearms</button>
+      <button class="btn" onclick="showPage('ammo')">Ammo</button>
+      <button class="btn" onclick="showPage('docs')">Documents</button>
+      <button class="btn" onclick="showPage('gear')">Gear</button>`;
+  } else if (page === 'firearms') {
+    ha.innerHTML = `
+      <button class="btn" onclick="exportFirearmsCSV()">Export CSV</button>
+      <button class="btn" onclick="exportFirearmsPDF()">Export PDF</button>
+      <button class="btn btn-primary" onclick="openFModal()">+ Add Firearm</button>`;
+    renderFirearms();
+  } else if (page === 'ammo') {
+    ha.innerHTML = `
+      <button class="btn" onclick="exportAmmoCSV()">Export CSV</button>
+      <button class="btn" onclick="exportAmmoPDF()">Export PDF</button>
+      <button class="btn btn-primary" onclick="openAModal()">+ Add Ammo</button>`;
+    renderAmmo();
+  } else if (page === 'docs') {
+    ha.innerHTML = `
+      <button class="btn btn-primary" onclick="openDModal()">+ Add Document</button>`;
+    renderDocs();
+  } else if (page === 'gear') {
+    ha.innerHTML = `
+      <button class="btn" onclick="exportGearCSV()">Export CSV</button>
+      <button class="btn" onclick="exportGearPDF()">Export PDF</button>
+      <button class="btn btn-primary" onclick="openGModal()">+ Add Gear</button>`;
+    renderGear();
+  }
+}
+
+/* ═══════════════════════════
+   SHARED HELPERS
+═══════════════════════════ */
+const TRASH_ICON = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+
+function genericSort(arr, col, dir) {
+  return arr.slice().sort((a, b) => {
+    let av = a[col] !== undefined ? a[col] : '';
+    let bv = b[col] !== undefined ? b[col] : '';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) { av = an; bv = bn; }
+    else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+    if (av < bv) return dir === 'asc' ? -1 : 1;
+    if (av > bv) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+/* ═══════════════════════════
+   FIREARMS
+═══════════════════════════ */
+const NFA_TYPES = ['SBR','SBS','Suppressor','Machine Gun','AOW','DD'];
+function isNFA(f) { return NFA_TYPES.includes(f.type) || !!f.nfaOrderNum; }
+
+const colorMap = {
+  'black':'#1a1a1a','fde':'#c8a96e','tan':'#c8a96e','flat dark earth':'#c8a96e',
+  'od green':'#4a5c3a','od':'#4a5c3a','olive drab':'#4a5c3a',
+  'gray':'#666','grey':'#666','stealth gray':'#555',
+  'white':'#e0e0d8','silver':'#a0a0a0','stainless':'#b0b0b0',
+  'blue':'#3a6ab0','red':'#a03030','purple':'#6b3a8a',
+  'titanium':'#8a9090','burnt bronze':'#7a4a20','cerakote':'#888','multicam':'#7a6a3a',
+};
+function swatchColor(s) {
+  if (!s) return '#333';
+  const k = s.toLowerCase().trim();
+  for (const [key, val] of Object.entries(colorMap)) if (k.includes(key)) return val;
+  return '#444';
+}
+
+function sortFirearms(col) {
+  if (fSortCol === col) fSortDir = fSortDir === 'asc' ? 'desc' : 'asc';
+  else { fSortCol = col; fSortDir = 'asc'; }
+  renderFirearms();
+}
+
+async function renderFirearms() {
+  const q    = document.getElementById('f-search').value.toLowerCase();
+  const tf   = document.getElementById('f-filter-type').value;
+  const nfaf = document.getElementById('f-filter-nfa').value;
+  const subf = document.getElementById('f-filter-submitted').value;
+
+  let data = firearms.filter(f => {
+    if (q && !['manufacturer','model','serial','caliber','color','nfaOrderNum'].some(k => String(f[k]||'').toLowerCase().includes(q))) return false;
+    if (tf && f.type !== tf) return false;
+    if (nfaf === 'yes' && !isNFA(f)) return false;
+    if (nfaf === 'no'  && isNFA(f))  return false;
+    if (subf === 'approved' && f.nfaStatus !== 'approved') return false;
+    if (subf === 'pending'  && f.nfaStatus !== 'pending')  return false;
+    if (subf === 'none'     && f.nfaStatus !== 'none' && f.nfaStatus !== undefined && f.nfaStatus !== '') return false;
+    return true;
+  });
+  data = genericSort(data, fSortCol, fSortDir);
+
+  document.querySelectorAll('#firearms-table th').forEach(t => { t.classList.remove('sorted','desc'); });
+  const thMap = { color:0, manufacturer:1, model:2, serial:3, caliber:4, type:5, barrelLength:6, overallLength:7, submitted:8, nfaOrderNum:9 };
+  const thIdx = thMap[fSortCol];
+  if (thIdx !== undefined) {
+    const th = document.querySelectorAll('#firearms-table th')[thIdx];
+    if (th) { th.classList.add('sorted'); if (fSortDir==='desc') th.classList.add('desc'); }
+  }
+
+  const tbody = document.getElementById('firearms-tbody');
+  const empty = document.getElementById('firearms-empty');
+
+  if (data.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; }
+  else {
+    empty.style.display = 'none';
+    // Build rows, then fill attachment indicators async
+    tbody.innerHTML = data.map(f => `
+      <tr>
+        <td><span class="color-swatch" style="background:${swatchColor(f.color)}"></span>${f.color||'—'}</td>
+        <td class="td-muted">${f.manufacturer||'—'}</td>
+        <td class="td-bold">${f.model||'—'}</td>
+        <td class="td-mono">${f.serial||'—'}</td>
+        <td>${f.caliber||'—'}</td>
+        <td><span class="badge ${isNFA(f)?'badge-nfa':'badge-std'}">${f.type||'—'}</span></td>
+        <td>${f.barrelLength ? parseFloat(f.barrelLength).toFixed(1) : '—'}</td>
+        <td>${f.overallLength ? parseFloat(f.overallLength).toFixed(1) : '—'}</td>
+        <td>${isNFA(f) ? (() => {
+          const s = f.nfaStatus || (f.submitted ? 'pending' : 'none');
+          const cls = s==='approved' ? 'submitted-approved' : s==='pending' ? 'submitted-pending' : 'submitted-none';
+          const lbl = s==='approved' ? 'Approved' : s==='pending' ? 'Pending' : 'Not Submitted';
+          return `<span class="submitted-dot ${cls}"></span>${lbl}`;
+        })() : '<span style="color:var(--muted2)">N/A</span>'}</td>
+        <td><span class="nfa-order ${f.nfaOrderNum?'':'empty'}">${f.nfaOrderNum||(isNFA(f)?'—':'')}</span></td>
+        <td class="td-actions" id="attach-indicators-${f.id}"><span style="color:var(--muted2);font-size:11px">—</span></td>
+        <td class="td-actions">
+          <button class="btn btn-sm" onclick="openFModal('${f.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteFirearm('${f.id}')" title="Delete" style="padding:4px 8px">${TRASH_ICON}</button>
+        </td>
+      </tr>`).join('');
+
+    // Fill attachment pills asynchronously
+    for (const f of data) {
+      const summary = await getMediaSummary(f.id);
+      const el = document.getElementById(`attach-indicators-${f.id}`);
+      if (!el) continue;
+      const pills = [];
+      if (summary.photo1 || summary.photo2) {
+        const count = (summary.photo1 ? 1 : 0) + (summary.photo2 ? 1 : 0);
+        pills.push(`<span class="attach-pill attach-pill-photo" onclick="openAttachViewer('${f.id}')" title="View photos">📷 ${count} photo${count>1?'s':''}</span>`);
+      }
+      if (summary.atf_form) {
+        pills.push(`<span class="attach-pill attach-pill-atf" onclick="viewMedia('${f.id}','atf_form')" title="View ATF form">ATF</span>`);
+      }
+      el.innerHTML = pills.length ? `<div class="attach-indicators">${pills.join('')}</div>` : '<span style="color:var(--muted2);font-size:11px">—</span>';
+    }
+  }
+
+  // stats
+  const total   = firearms.length;
+  const nfaCnt  = firearms.filter(isNFA).length;
+  const pending = firearms.filter(f => isNFA(f) && (f.nfaStatus||'none') !== 'approved').length;
+  const types   = [...new Set(firearms.map(f => f.type).filter(Boolean))].length;
+  document.getElementById('firearms-stats-bar').innerHTML = `
+    <div class="stat"><div class="stat-value">${total}</div><div class="stat-label">Total Firearms</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${nfaCnt}</div><div class="stat-label">NFA Items</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${pending}</div><div class="stat-label">NFA Pending</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${types}</div><div class="stat-label">Types</div></div>`;
+
+  updateTabBadges();
+  updateHome();
+}
+
+// Pending file selections (held in memory until Save)
+const pendingFiles = { photo1: null, photo2: null, atf_form: null };
+const removedSlots = new Set();
+
+function triggerFileInput(id) { document.getElementById(id).click(); }
+
+function handleFileSelect(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  pendingFiles[type] = file;
+  removedSlots.delete(type);
+  const slot = document.getElementById(`slot-${type}`);
+  slot.classList.add('has-file');
+  // Preview image if photo
+  if (type !== 'atf_form' && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      let img = slot.querySelector('img');
+      if (!img) { img = document.createElement('img'); slot.prepend(img); }
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  // Show filename
+  const nameEl = document.getElementById(`slot-${type}-name`);
+  nameEl.textContent = file.name;
+  nameEl.style.display = 'block';
+  // Hide placeholder icon/text
+  const icon  = slot.querySelector('.attach-slot-icon');
+  const label = slot.querySelector('.attach-slot-label');
+  if (icon)  icon.style.display  = 'none';
+  if (label) label.style.display = 'none';
+}
+
+function clearSlot(type) {
+  pendingFiles[type] = null;
+  removedSlots.add(type);
+  const slot = document.getElementById(`slot-${type}`);
+  slot.classList.remove('has-file');
+  const img = slot.querySelector('img');
+  if (img) img.remove();
+  const nameEl = document.getElementById(`slot-${type}-name`);
+  nameEl.style.display = 'none';
+  const icon  = slot.querySelector('.attach-slot-icon');
+  const label = slot.querySelector('.attach-slot-label');
+  if (icon)  icon.style.display  = '';
+  if (label) label.style.display = '';
+  // Clear the file input
+  const inputMap = { photo1:'ff-file-photo1', photo2:'ff-file-photo2', atf_form:'ff-file-atf_form' };
+  const inp = document.getElementById(inputMap[type]);
+  if (inp) inp.value = '';
+}
+
+function resetSlots() {
+  ['photo1','photo2','atf_form'].forEach(t => {
+    pendingFiles[t] = null;
+    removedSlots.delete(t);
+    const slot = document.getElementById(`slot-${t}`);
+    if (!slot) return;
+    slot.classList.remove('has-file');
+    const img = slot.querySelector('img');
+    if (img) img.remove();
+    document.getElementById(`slot-${t}-name`).style.display = 'none';
+    const icon  = slot.querySelector('.attach-slot-icon');
+    const label = slot.querySelector('.attach-slot-label');
+    if (icon)  icon.style.display  = '';
+    if (label) label.style.display = '';
+  });
+  ['ff-file-photo1','ff-file-photo2','ff-file-atf_form'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+}
+
+async function loadSlotsForFirearm(firearmId) {
+  const summary = await getMediaSummary(firearmId);
+  for (const type of ['photo1','photo2','atf_form']) {
+    const m = summary[type];
+    if (!m) continue;
+    const slot = document.getElementById(`slot-${type}`);
+    if (!slot) continue;
+    slot.classList.add('has-file');
+    if (type !== 'atf_form' && m.mime.startsWith('image/')) {
+      const blob = new Blob([m.data], { type: m.mime });
+      const url  = URL.createObjectURL(blob);
+      let img = slot.querySelector('img');
+      if (!img) { img = document.createElement('img'); slot.prepend(img); }
+      img.src = url;
+    }
+    const nameEl = document.getElementById(`slot-${type}-name`);
+    nameEl.textContent = m.name;
+    nameEl.style.display = 'block';
+    const icon  = slot.querySelector('.attach-slot-icon');
+    const label = slot.querySelector('.attach-slot-label');
+    if (icon)  icon.style.display  = 'none';
+    if (label) label.style.display = 'none';
+  }
+}
+
+async function openFModal(id) {
+  fEditId = id || null;
+  resetSlots();
+  document.getElementById('fmodal-title').textContent = id ? 'Edit Firearm' : 'Add Firearm';
+  if (id) {
+    const f = firearms.find(x => x.id === id);
+    if (!f) return;
+    document.getElementById('ff-color').value       = f.color||'';
+    document.getElementById('ff-manufacturer').value= f.manufacturer||'';
+    document.getElementById('ff-model').value       = f.model||'';
+    document.getElementById('ff-serial').value      = f.serial||'';
+    document.getElementById('ff-caliber').value     = f.caliber||'';
+    document.getElementById('ff-type').value        = f.type||'';
+    document.getElementById('ff-barrel').value      = f.barrelLength||'';
+    document.getElementById('ff-oal').value         = f.overallLength||'';
+    document.getElementById('ff-nfa-order').value   = f.nfaOrderNum||'';
+    document.getElementById('ff-nfa-status').value  = f.nfaStatus || (f.submitted ? 'pending' : 'none');
+    await loadSlotsForFirearm(id);
+  } else {
+    ['ff-color','ff-manufacturer','ff-model','ff-serial','ff-caliber','ff-nfa-order'].forEach(i => document.getElementById(i).value='');
+    document.getElementById('ff-type').value=''; document.getElementById('ff-barrel').value='';
+    document.getElementById('ff-oal').value=''; document.getElementById('ff-nfa-status').value='none';
+  }
+  document.getElementById('firearms-modal').classList.add('open');
+  document.getElementById('ff-color').focus();
+}
+function closeFModal() { document.getElementById('firearms-modal').classList.remove('open'); fEditId=null; resetSlots(); }
+
+async function saveFirearm() {
+  const entry = {
+    id: fEditId || crypto.randomUUID(),
+    color:        document.getElementById('ff-color').value.trim(),
+    manufacturer: document.getElementById('ff-manufacturer').value.trim(),
+    model:        document.getElementById('ff-model').value.trim(),
+    serial:       document.getElementById('ff-serial').value.trim(),
+    caliber:      document.getElementById('ff-caliber').value.trim(),
+    type:         document.getElementById('ff-type').value,
+    barrelLength: document.getElementById('ff-barrel').value,
+    overallLength:document.getElementById('ff-oal').value,
+    nfaOrderNum:  document.getElementById('ff-nfa-order').value.trim(),
+    nfaStatus:    document.getElementById('ff-nfa-status').value,
+    submitted:    document.getElementById('ff-nfa-status').value !== 'none', // legacy compat
+    updatedAt:    new Date().toISOString(),
+  };
+  if (!entry.model && !entry.manufacturer) { alert('Please enter at minimum a Manufacturer or Model.'); return; }
+  if (!fEditId) entry.createdAt = entry.updatedAt;
+
+  await dbPut('firearms', entry);
+
+  // Save pending files
+  for (const type of ['photo1','photo2','atf_form']) {
+    if (pendingFiles[type]) await saveMedia(entry.id, type, pendingFiles[type]);
+    else if (removedSlots.has(type)) await dbDelete('media', `${entry.id}_${type}`);
+  }
+
+  firearms = await dbGetAll('firearms');
+  closeFModal(); renderFirearms();
+}
+
+async function deleteFirearm(id) {
+  if (!confirm('Remove this firearm and all attached files from the registry?')) return;
+  await dbDelete('firearms', id);
+  await deleteMediaForFirearm(id);
+  firearms = await dbGetAll('firearms');
+  renderFirearms();
+}
+
+function exportFirearmsCSV() {
+  const hdrs = ['Color','Manufacturer','Model','Serial #','Caliber','Type','Barrel Length (in)','Overall Length (in)','Submitted','NFA Order #'];
+  const rows = firearms.map(f => [f.color,f.manufacturer,f.model,f.serial,f.caliber,f.type,f.barrelLength,f.overallLength,isNFA(f)?(f.nfaStatus==='approved'?'Approved':f.nfaStatus==='pending'?'Pending':'Not Submitted'):'N/A',f.nfaOrderNum].map(v=>`"${String(v||'').replace(/"/g,'""')}"`));
+  const csv = [hdrs.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `armory_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+
+function exportFirearmsPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+  const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+  const ts = new Date().toISOString().slice(0,10);
+
+  // Header bar
+  doc.setFillColor(20, 21, 24);
+  doc.rect(0, 0, doc.internal.pageSize.getWidth(), 48, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(200, 169, 110);
+  doc.text('ARMORY', 36, 30);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(122, 125, 133);
+  doc.text('FIREARMS REGISTRY', 36, 42);
+  doc.text('Generated: ' + dateStr, doc.internal.pageSize.getWidth() - 36, 30, { align: 'right' });
+
+  const nfaCnt  = firearms.filter(isNFA).length;
+  const pending = firearms.filter(f => isNFA(f) && (f.nfaStatus||'none') !== 'approved').length;
+
+  // Summary line
+  doc.setFontSize(8);
+  doc.setTextColor(122, 125, 133);
+  doc.text(
+    `Total: ${firearms.length}  |  NFA Items: ${nfaCnt}  |  NFA Pending: ${pending}`,
+    doc.internal.pageSize.getWidth() - 36, 42, { align: 'right' }
+  );
+
+  doc.autoTable({
+    startY: 60,
+    head: [['Color','Manufacturer','Model','Serial #','Caliber','Type','Bbl (in)','OAL (in)','Submitted','NFA Order #']],
+    body: firearms.map(f => [
+      f.color || '',
+      f.manufacturer || '',
+      f.model || '',
+      f.serial || '',
+      f.caliber || '',
+      f.type || '',
+      f.barrelLength ? parseFloat(f.barrelLength).toFixed(1) : '',
+      f.overallLength ? parseFloat(f.overallLength).toFixed(1) : '',
+      isNFA(f) ? (f.nfaStatus==='approved' ? 'Approved' : f.nfaStatus==='pending' ? 'Pending' : 'Not Submitted') : 'N/A',
+      f.nfaOrderNum || '',
+    ]),
+    styles: {
+      font: 'helvetica',
+      fontSize: 8,
+      cellPadding: 5,
+      textColor: [232, 230, 224],
+      fillColor: [20, 21, 24],
+      lineColor: [42, 45, 51],
+      lineWidth: 0.5,
+    },
+    headStyles: {
+      fillColor: [28, 30, 34],
+      textColor: [122, 125, 133],
+      fontSize: 7,
+      fontStyle: 'bold',
+    },
+    alternateRowStyles: { fillColor: [13, 14, 16] },
+    columnStyles: {
+      0: { cellWidth: 52 },
+      1: { cellWidth: 78 },
+      2: { cellWidth: 78 },
+      3: { cellWidth: 80 },
+      4: { cellWidth: 72 },
+      5: { cellWidth: 52 },
+      6: { cellWidth: 42 },
+      7: { cellWidth: 42 },
+      8: { cellWidth: 50 },
+      9: { cellWidth: 90 },
+    },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 8) {
+        const v = data.cell.raw;
+        if (v === 'Approved') data.cell.styles.textColor = [94, 184, 122];
+        else if (v === 'Pending') data.cell.styles.textColor = [212, 137, 58];
+        else data.cell.styles.textColor = [85, 88, 96];
+      }
+      if (data.section === 'body' && data.column.index === 5) {
+        const nfaTypes = ['SBR','SBS','Suppressor','Machine Gun','AOW','DD'];
+        if (nfaTypes.includes(data.cell.raw)) data.cell.styles.textColor = [200, 169, 110];
+      }
+      if (data.section === 'body' && data.column.index === 9 && data.cell.raw) {
+        data.cell.styles.textColor = [200, 169, 110];
+      }
+    },
+    margin: { left: 36, right: 36 },
+  });
+
+  // Page numbers
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setTextColor(85, 88, 96);
+    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 16, { align: 'center' });
+    doc.text('ARMORY // PERSONAL REGISTRY — CONFIDENTIAL', 36, doc.internal.pageSize.getHeight() - 16);
+  }
+
+  doc.save(`armory_firearms_${ts}.pdf`);
+}
+
+/* ═══════════════════════════
+   AMMO
+═══════════════════════════ */
+function stockStatus(a) {
+  const qty = parseInt(a.quantity)||0, thr = parseInt(a.lowStockThreshold)||0;
+  if (qty===0) return 'out';
+  if (thr>0 && qty<=thr) return 'low';
+  return 'ok';
+}
+function calcCPR(a) {
+  // Prefer new bulk model: totalPaid / totalRoundsPurchased
+  const tp = parseFloat(a.totalPaid), tr = parseInt(a.totalRoundsPurchased);
+  if (tp > 0 && tr > 0) return tp / tr;
+  // Legacy fallback: pricePaid / roundsPerBox
+  const p = parseFloat(a.pricePaid), r = parseInt(a.roundsPerBox);
+  return (p > 0 && r > 0) ? p / r : null;
+}
+function ammoBadgeClass(type) {
+  if (!type) return 'badge-other';
+  const t=type.toLowerCase();
+  if (t.includes('fmj')) return 'badge-fmj';
+  if (t.includes('jhp')) return 'badge-jhp';
+  if (t==='hp') return 'badge-hp';
+  if (t.includes('sp')) return 'badge-sp';
+  if (t.includes('match')||t.includes('otm')) return 'badge-match';
+  if (t.includes('sub')) return 'badge-sub';
+  if (t.includes('tracer')) return 'badge-tracer';
+  return 'badge-other';
+}
+
+function sortAmmo(col) {
+  if (aSortCol===col) aSortDir=aSortDir==='asc'?'desc':'asc';
+  else { aSortCol=col; aSortDir='asc'; }
+  renderAmmo();
+}
+
+function updateCaliberFilter() {
+  const sel=document.getElementById('a-filter-caliber'), cur=sel.value;
+  const cals=[...new Set(ammo.map(a=>a.caliber).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">All Calibers</option>'+cals.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+function renderAmmo() {
+  updateCaliberFilter();
+  const q=document.getElementById('a-search').value.toLowerCase();
+  const cf=document.getElementById('a-filter-caliber').value;
+  const tf=document.getElementById('a-filter-type').value;
+  const sf=document.getElementById('a-filter-stock').value;
+
+  let data = ammo.map(a=>({...a,cprCalc:calcCPR(a)||0})).filter(a=>{
+    if (q&&!['caliber','brand','product','bulletType','location','notes','lot'].some(k=>String(a[k]||'').toLowerCase().includes(q))) return false;
+    if (cf&&a.caliber!==cf) return false;
+    if (tf&&a.bulletType!==tf) return false;
+    if (sf&&stockStatus(a)!==sf) return false;
+    return true;
+  });
+  data=genericSort(data,aSortCol,aSortDir);
+
+  const tbody=document.getElementById('ammo-tbody'), empty=document.getElementById('ammo-empty');
+  if (data.length===0) { tbody.innerHTML=''; empty.style.display='block'; }
+  else {
+    empty.style.display='none';
+    tbody.innerHTML=data.map(a=>{
+      const status=stockStatus(a), qty=parseInt(a.quantity)||0;
+      const qc=status==='out'?'qty-out':status==='low'?'qty-low':'qty-ok';
+      const rc=status==='out'?'out-stock':status==='low'?'low-stock':'';
+      const cpr=calcCPR(a), rpb=parseInt(a.roundsPerBox)||0;
+      const adjBy = parseInt(a.adjustBy) || rpb || 1;
+      const boxes=rpb>0?(qty/rpb).toFixed(1):'—';
+      return `<tr class="${rc}">
+        <td class="td-mono">${a.caliber||'—'}</td>
+        <td class="td-bold">${a.brand||'—'}<br><span class="td-muted">${a.product||''}</span></td>
+        <td class="td-mono">${a.bulletWeight?a.bulletWeight+' gr':'—'}</td>
+        <td><span class="badge ${ammoBadgeClass(a.bulletType)}">${a.bulletType||'—'}</span></td>
+        <td>
+          <div class="qty-cell">
+            <span class="qty-num ${qc}">${qty.toLocaleString()}</span>
+            <div class="qty-adj">
+              <button class="qty-btn minus" onclick="adjustQty('${a.id}',-${adjBy})" title="−${adjBy}">−</button>
+              <button class="qty-btn" onclick="adjustQty('${a.id}',${adjBy})" title="+${adjBy}">+</button>
+            </div>
+          </div>
+          <span class="td-muted">${rpb>0?boxes+' boxes':''}</span>
+        </td>
+        <td class="td-mono">${rpb||'—'}</td>
+        <td class="price-cell">${a.totalPaid?'$'+parseFloat(a.totalPaid).toFixed(2):(a.pricePaid?'$'+parseFloat(a.pricePaid).toFixed(2):'—')}</td>
+        <td class="price-cell">${cpr?'$'+cpr.toFixed(3):'—'}</td>
+        <td>${a.location?`<span class="location-tag">${a.location}</span>`:'<span class="td-muted">—</span>'}</td>
+        <td class="td-mono" style="color:${a.lowStockThreshold?'var(--warning)':'var(--muted2)'}">
+          ${a.lowStockThreshold?parseInt(a.lowStockThreshold).toLocaleString():'—'}
+        </td>
+        <td class="td-muted" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${a.notes||''}">${a.notes||''}</td>
+        <td class="td-actions">
+          <button class="btn btn-sm" onclick="openAModal('${a.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteAmmo('${a.id}')" title="Delete" style="padding:4px 8px">${TRASH_ICON}</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // stats
+  const totalRds = ammo.reduce((s,a)=>s+(parseInt(a.quantity)||0),0);
+  const cals     = new Set(ammo.map(a=>a.caliber).filter(Boolean)).size;
+  const lowCnt   = ammo.filter(a=>stockStatus(a)==='low').length;
+  const outCnt   = ammo.filter(a=>stockStatus(a)==='out').length;
+  const totVal   = ammo.reduce((s,a)=>{const c=calcCPR(a);return s+(c?c*(parseInt(a.quantity)||0):0);},0);
+  document.getElementById('ammo-stats-bar').innerHTML = `
+    <div class="stat"><div class="stat-value">${totalRds.toLocaleString()}</div><div class="stat-label">Total Rounds</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${ammo.length}</div><div class="stat-label">Line Items</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${cals}</div><div class="stat-label">Calibers</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value ${lowCnt>0?'warn':''}">${lowCnt}</div><div class="stat-label">Low Stock</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value ${outCnt>0?'warn':''}">${outCnt}</div><div class="stat-label">Out of Stock</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">$${totVal.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}</div><div class="stat-label">Est. Value</div></div>`;
+
+  updateTabBadges();
+  updateHome();
+}
+
+async function adjustQty(id, delta) {
+  const entry = ammo.find(a => a.id === id);
+  if (!entry) return;
+  entry.quantity = Math.max(0, (parseInt(entry.quantity)||0) + delta);
+  entry.updatedAt = new Date().toISOString();
+  await dbPut('ammo', entry);
+  ammo = await dbGetAll('ammo');
+  renderAmmo();
+}
+
+function openAModal(id) {
+  aEditId=id||null;
+  document.getElementById('amodal-title').textContent=id?'Edit Ammunition':'Add Ammunition';
+  if (id) {
+    const a=ammo.find(x=>x.id===id); if (!a) return;
+    document.getElementById('af-caliber').value  =a.caliber||'';
+    document.getElementById('af-brand').value    =a.brand||'';
+    document.getElementById('af-product').value  =a.product||'';
+    document.getElementById('af-type').value     =a.bulletType||'';
+    document.getElementById('af-grain').value    =a.bulletWeight||'';
+    document.getElementById('af-velocity').value =a.muzzleVelocity||'';
+    document.getElementById('af-qty').value      =a.quantity||'';
+    document.getElementById('af-rpb').value      =a.roundsPerBox||'';
+    document.getElementById('af-total-paid').value      =a.totalPaid||'';
+    document.getElementById('af-total-rounds').value    =a.totalRoundsPurchased||'';
+    document.getElementById('af-adjustby').value        =a.adjustBy||'';
+    document.getElementById('af-alert').value    =a.lowStockThreshold||'';
+    document.getElementById('af-location').value =a.location||'';
+    document.getElementById('af-lot').value      =a.lot||'';
+    document.getElementById('af-notes').value    =a.notes||'';
+  } else {
+    ['af-caliber','af-brand','af-product','af-grain','af-velocity','af-qty','af-rpb','af-total-paid','af-total-rounds','af-adjustby','af-alert','af-location','af-lot','af-notes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('af-type').value='';
+  }
+  document.getElementById('ammo-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('af-caliber').focus(),50);
+}
+function closeAModal() { document.getElementById('ammo-modal').classList.remove('open'); aEditId=null; }
+
+async function saveAmmo() {
+  const caliber=document.getElementById('af-caliber').value.trim();
+  const brand  =document.getElementById('af-brand').value.trim();
+  if (!caliber&&!brand) { alert('Please enter at minimum a Caliber or Brand.'); return; }
+  const entry={
+    id: aEditId||crypto.randomUUID(),
+    caliber, brand,
+    product:           document.getElementById('af-product').value.trim(),
+    bulletType:        document.getElementById('af-type').value,
+    bulletWeight:      document.getElementById('af-grain').value,
+    muzzleVelocity:    document.getElementById('af-velocity').value,
+    quantity:          document.getElementById('af-qty').value,
+    roundsPerBox:      document.getElementById('af-rpb').value,
+    totalPaid:         document.getElementById('af-total-paid').value,
+    totalRoundsPurchased: document.getElementById('af-total-rounds').value,
+    adjustBy:          document.getElementById('af-adjustby').value,
+    lowStockThreshold: document.getElementById('af-alert').value,
+    location:          document.getElementById('af-location').value.trim(),
+    lot:               document.getElementById('af-lot').value.trim(),
+    notes:             document.getElementById('af-notes').value.trim(),
+    updatedAt:         new Date().toISOString(),
+  };
+  if (!aEditId) entry.createdAt = entry.updatedAt;
+  await dbPut('ammo', entry);
+  ammo = await dbGetAll('ammo');
+  closeAModal(); renderAmmo();
+}
+
+async function deleteAmmo(id) {
+  if (!confirm('Remove this ammunition entry from the registry?')) return;
+  await dbDelete('ammo', id);
+  ammo = await dbGetAll('ammo');
+  renderAmmo();
+}
+
+function exportAmmoCSV() {
+  const hdrs=['Caliber','Brand','Product','Bullet Type','Grain','Muzzle Velocity (fps)','Quantity (rds)','Rounds/Box','Total Paid ($)','Total Rounds Purchased','CPR ($)','Adjust By','Location','Lot/Date Code','Low Stock Alert','Notes'];
+  const rows=ammo.map(a=>{const cpr=calcCPR(a);return[a.caliber,a.brand,a.product,a.bulletType,a.bulletWeight,a.muzzleVelocity,a.quantity,a.roundsPerBox,a.totalPaid,a.totalRoundsPurchased,cpr?cpr.toFixed(3):'',a.adjustBy,a.location,a.lot,a.lowStockThreshold,a.notes].map(v=>`"${String(v||'').replace(/"/g,'""')}"`)});
+  const csv=[hdrs.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`ammo_inventory_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+
+function exportAmmoPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+  const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+  const ts = new Date().toISOString().slice(0,10);
+
+  const totalRds = ammo.reduce((s,a) => s + (parseInt(a.quantity)||0), 0);
+  const totVal   = ammo.reduce((s,a) => { const c=calcCPR(a); return s+(c?c*(parseInt(a.quantity)||0):0); }, 0);
+  const lowCnt   = ammo.filter(a => stockStatus(a) === 'low').length;
+  const outCnt   = ammo.filter(a => stockStatus(a) === 'out').length;
+  const cals     = [...new Set(ammo.map(a => a.caliber).filter(Boolean))].length;
+
+  // Header bar
+  doc.setFillColor(20, 21, 24);
+  doc.rect(0, 0, doc.internal.pageSize.getWidth(), 48, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(200, 169, 110);
+  doc.text('ARMORY', 36, 30);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(122, 125, 133);
+  doc.text('AMMUNITION INVENTORY', 36, 42);
+  doc.text('Generated: ' + dateStr, doc.internal.pageSize.getWidth() - 36, 30, { align: 'right' });
+  doc.text(
+    `Total Rounds: ${totalRds.toLocaleString()}  |  Calibers: ${cals}  |  Low/Out: ${lowCnt + outCnt}  |  Est. Value: $${totVal.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}`,
+    doc.internal.pageSize.getWidth() - 36, 42, { align: 'right' }
+  );
+
+  doc.autoTable({
+    startY: 60,
+    head: [['Caliber','Brand','Product','Type','Grain','Qty (rds)','Boxes','Rds/Box','Total Paid','CPR','Location','Notes']],
+    body: ammo.map(a => {
+      const cpr = calcCPR(a);
+      const qty = parseInt(a.quantity) || 0;
+      const rpb = parseInt(a.roundsPerBox) || 0;
+      return [
+        a.caliber || '',
+        a.brand || '',
+        a.product || '',
+        a.bulletType || '',
+        a.bulletWeight ? a.bulletWeight + ' gr' : '',
+        qty.toLocaleString(),
+        rpb > 0 ? (qty / rpb).toFixed(1) : '',
+        rpb || '',
+        a.totalPaid ? '$' + parseFloat(a.totalPaid).toFixed(2) : (a.pricePaid ? '$' + parseFloat(a.pricePaid).toFixed(2) : ''),
+        cpr ? '$' + cpr.toFixed(3) : '',
+        a.location || '',
+        a.notes || '',
+      ];
+    }),
+    styles: {
+      font: 'helvetica',
+      fontSize: 8,
+      cellPadding: 5,
+      textColor: [232, 230, 224],
+      fillColor: [20, 21, 24],
+      lineColor: [42, 45, 51],
+      lineWidth: 0.5,
+    },
+    headStyles: {
+      fillColor: [28, 30, 34],
+      textColor: [122, 125, 133],
+      fontSize: 7,
+      fontStyle: 'bold',
+    },
+    alternateRowStyles: { fillColor: [13, 14, 16] },
+    columnStyles: {
+      0: { cellWidth: 72 },
+      1: { cellWidth: 70 },
+      2: { cellWidth: 68 },
+      3: { cellWidth: 52 },
+      4: { cellWidth: 36 },
+      5: { cellWidth: 46 },
+      6: { cellWidth: 36 },
+      7: { cellWidth: 36 },
+      8: { cellWidth: 46 },
+      9: { cellWidth: 40 },
+      10: { cellWidth: 56 },
+      11: { cellWidth: 'auto' },
+    },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 5) {
+        const row = ammo[data.row.index];
+        if (row) {
+          const s = stockStatus(row);
+          if (s === 'out') data.cell.styles.textColor = [224, 85, 85];
+          else if (s === 'low') data.cell.styles.textColor = [212, 137, 58];
+          else data.cell.styles.textColor = [94, 184, 122];
+        }
+      }
+      if (data.section === 'body' && (data.column.index === 8 || data.column.index === 9)) {
+        data.cell.styles.textColor = [122, 125, 133];
+      }
+    },
+    margin: { left: 36, right: 36 },
+  });
+
+  // Page numbers
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setTextColor(85, 88, 96);
+    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 16, { align: 'center' });
+    doc.text('ARMORY // PERSONAL REGISTRY — CONFIDENTIAL', 36, doc.internal.pageSize.getHeight() - 16);
+  }
+
+  doc.save(`armory_ammo_${ts}.pdf`);
+}
+
+/* ═══════════════════════════
+   HOME DASHBOARD
+═══════════════════════════ */
+function updateHome() {
+  if (currentPage !== 'home') return;
+
+  // hero date
+  document.getElementById('hero-date').textContent =
+    new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
+
+  // firearm counts
+  const nfaCnt   = firearms.filter(isNFA).length;
+  const pending  = firearms.filter(f=>isNFA(f)&&(f.nfaStatus||'none')!=='approved').length;
+  const fTypes   = [...new Set(firearms.map(f=>f.type).filter(Boolean))].length;
+
+  const hcNfaPending = document.getElementById('hc-nfa-pending');
+  hcNfaPending.textContent = pending;
+  hcNfaPending.className   = 'home-card-value' + (pending > 0 ? ' warn' : '');
+
+  document.getElementById('hc-total-firearms').textContent = firearms.length;
+  document.getElementById('hc-firearms-sub').textContent   = fTypes + ' type' + (fTypes!==1?'s':'') + ' in collection';
+  document.getElementById('hc-nfa').textContent            = nfaCnt;
+  document.getElementById('hc-nfa-sub').textContent        = (firearms.length - nfaCnt) + ' non-NFA item' + ((firearms.length-nfaCnt)!==1?'s':'');
+
+  // ammo counts
+  const totalRds = ammo.reduce((s,a)=>s+(parseInt(a.quantity)||0),0);
+  const lowCnt   = ammo.filter(a=>stockStatus(a)==='low').length;
+  const outCnt   = ammo.filter(a=>stockStatus(a)==='out').length;
+  const alertCnt = lowCnt + outCnt;
+  const totVal   = ammo.reduce((s,a)=>{const c=calcCPR(a);return s+(c?c*(parseInt(a.quantity)||0):0);},0);
+  const cals     = [...new Set(ammo.map(a=>a.caliber).filter(Boolean))].length;
+
+  document.getElementById('hc-rounds').textContent          = totalRds.toLocaleString();
+  document.getElementById('hc-rounds-sub').textContent      = cals + ' caliber' + (cals!==1?'s':'') + ' tracked';
+  document.getElementById('hc-ammo-value').textContent      = '$' + totVal.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+  document.getElementById('hc-ammo-value-sub').textContent  = ammo.length + ' line item' + (ammo.length!==1?'s':'');
+
+  const hcLow = document.getElementById('hc-low-stock');
+  hcLow.textContent = alertCnt;
+  hcLow.className   = 'home-card-value' + (alertCnt > 0 ? ' warn' : ' success');
+
+  // NFA pending list — show items not yet approved, grouped by status
+  const pendingList = firearms.filter(f=>isNFA(f)&&(f.nfaStatus||'none')!=='approved').slice(0,6);
+  document.getElementById('home-nfa-list').innerHTML = pendingList.length === 0
+    ? '<div class="home-empty">All NFA items approved.</div>'
+    : pendingList.map(f=>{
+        const s = f.nfaStatus || 'none';
+        const statusBadge = s === 'pending'
+          ? `<span class="badge" style="background:rgba(212,137,58,.15);color:var(--warning);border:1px solid rgba(212,137,58,.3)">Pending</span>`
+          : `<span class="badge badge-std">Not Submitted</span>`;
+        return `<div class="home-list-item">
+          <div>
+            <div class="home-list-name">${f.manufacturer||''} ${f.model||'—'}</div>
+            <div class="home-list-sub">${f.type||''} · ${f.serial||'No serial'}</div>
+          </div>
+          ${statusBadge}
+        </div>`;
+      }).join('');
+
+  // Ammo alerts list
+  const alertList = ammo.filter(a=>stockStatus(a)!=='ok').slice(0,6);
+  document.getElementById('home-ammo-alerts').innerHTML = alertList.length === 0
+    ? '<div class="home-empty">All ammo levels OK.</div>'
+    : alertList.map(a=>{
+        const s=stockStatus(a);
+        return `<div class="home-list-item">
+          <div>
+            <div class="home-list-name">${a.brand||''} ${a.product||a.caliber||'—'}</div>
+            <div class="home-list-sub">${a.caliber||''} · ${parseInt(a.quantity)||0} rds remaining</div>
+          </div>
+          <span class="dot ${s==='out'?'dot-danger':'dot-warn'}"></span>
+        </div>`;}).join('');
+
+  // Caliber coverage pills
+  const calMap = {};
+  ammo.forEach(a=>{ if (a.caliber) { calMap[a.caliber]=(calMap[a.caliber]||0)+(parseInt(a.quantity)||0); } });
+  // also include firearms calibers that have no ammo
+  firearms.forEach(f=>{ if (f.caliber && !(f.caliber in calMap)) calMap[f.caliber]=0; });
+
+  const pills = Object.entries(calMap).sort((a,b)=>b[1]-a[1]).map(([cal,qty])=>{
+    const hasAmmo = qty > 0;
+    return `<div style="
+      font-family:'IBM Plex Mono',monospace;font-size:11px;
+      padding:5px 12px;border-radius:2px;
+      background:${hasAmmo?'rgba(200,169,110,.12)':'var(--bg3)'};
+      border:1px solid ${hasAmmo?'rgba(200,169,110,.3)':'var(--border)'};
+      color:${hasAmmo?'var(--accent)':'var(--muted2)'};
+      white-space:nowrap;
+    ">${cal}${qty>0?' · '+qty.toLocaleString()+' rds':' · no ammo'}</div>`;
+  });
+  document.getElementById('home-caliber-grid').innerHTML = pills.join('') ||
+    '<span style="color:var(--muted2);font-size:12px;font-family:\'IBM Plex Mono\',monospace">No data yet.</span>';
+}
+
+/* ═══════════════════════════
+   TAB BADGES
+═══════════════════════════ */
+function updateTabBadges() {
+  document.getElementById('tab-badge-firearms').textContent = firearms.length;
+  document.getElementById('tab-badge-ammo').textContent     = ammo.length;
+  document.getElementById('tab-badge-docs').textContent     = docs.length;
+  document.getElementById('tab-badge-gear').textContent     = gear.length;
+}
+
+/* ═══════════════════════════
+   MEDIA VIEWER
+═══════════════════════════ */
+let viewerObjectURLs = [];
+
+async function viewMedia(firearmId, type) {
+  const m = await getMedia(firearmId, type);
+  if (!m) { alert('File not found.'); return; }
+
+  // Revoke any previous object URLs to avoid memory leaks
+  viewerObjectURLs.forEach(u => URL.revokeObjectURL(u));
+  viewerObjectURLs = [];
+
+  const blob = new Blob([m.data], { type: m.mime });
+  const url  = URL.createObjectURL(blob);
+  viewerObjectURLs.push(url);
+
+  const img     = document.getElementById('viewer-img');
+  const iframe  = document.getElementById('viewer-iframe');
+  const label   = document.getElementById('viewer-label');
+  const dlBtn   = document.getElementById('viewer-download');
+
+  label.textContent = m.name;
+  dlBtn.href        = url;
+  dlBtn.download    = m.name;
+
+  if (m.mime === 'application/pdf') {
+    img.style.display    = 'none';
+    iframe.style.display = 'block';
+    iframe.src           = url;
+  } else {
+    iframe.style.display = 'none';
+    img.style.display    = 'block';
+    img.src              = url;
+  }
+
+  document.getElementById('viewer-overlay').classList.add('open');
+}
+
+async function openAttachViewer(firearmId) {
+  // Open first available photo
+  const summary = await getMediaSummary(firearmId);
+  if (summary.photo1) await viewMedia(firearmId, 'photo1');
+  else if (summary.photo2) await viewMedia(firearmId, 'photo2');
+}
+
+function closeViewer() {
+  document.getElementById('viewer-overlay').classList.remove('open');
+  const img    = document.getElementById('viewer-img');
+  const iframe = document.getElementById('viewer-iframe');
+  img.src    = '';
+  iframe.src = '';
+  viewerObjectURLs.forEach(u => URL.revokeObjectURL(u));
+  viewerObjectURLs = [];
+}
+
+/* ═══════════════════════════
+   GEAR & ACCESSORIES
+═══════════════════════════ */
+let gEditId = null;
+let gSortCol = 'gearType', gSortDir = 'asc';
+
+const GEAR_TYPE_CLASS = {
+  'Magazine':       'gear-magazine',
+  'Barrel':         'gear-barrel',
+  'Optic':          'gear-optic',
+  'Trigger':        'gear-trigger',
+  'Stock / Brace':  'gear-stock',
+  'Light / Laser':  'gear-light',
+  'Bipod / Tripod': 'gear-bipod',
+  'Case / Bag':     'gear-case',
+  'Cleaning':       'gear-cleaning',
+  'Other':          'gear-other',
+};
+
+const GEAR_COND_CLASS = {
+  'New':    'gear-cond-new',
+  'Good':   'gear-cond-good',
+  'Worn':   'gear-cond-worn',
+  'Retire': 'gear-cond-ret',
+};
+
+function gearTypeClass(t)  { return GEAR_TYPE_CLASS[t]  || 'gear-other'; }
+function gearCondClass(c)  { return GEAR_COND_CLASS[c]  || ''; }
+
+// Show/hide type-specific fields in the modal
+function updateGearFields() {
+  const type = document.getElementById('gf-type').value;
+  const specLabel = document.getElementById('gf-spec-label');
+  const specInput = document.getElementById('gf-caliber');
+  document.getElementById('gear-mag-fields').style.display     = type === 'Magazine'     ? '' : 'none';
+  document.getElementById('gear-barrel-fields').style.display  = type === 'Barrel'       ? '' : 'none';
+  document.getElementById('gear-optic-fields').style.display   = type === 'Optic'        ? '' : 'none';
+  document.getElementById('gear-trigger-fields').style.display = type === 'Trigger'      ? '' : 'none';
+  document.getElementById('gear-light-fields').style.display   = type === 'Light / Laser'? '' : 'none';
+  // Update spec label placeholder per type
+  const specs = {
+    'Magazine':'Caliber', 'Barrel':'Caliber / Twist', 'Optic':'Magnification range',
+    'Trigger':'Platform', 'Stock / Brace':'Platform', 'Light / Laser':'Output',
+    'Bipod / Tripod':'Leg range', 'Case / Bag':'Dimensions / capacity',
+    'Cleaning':'Caliber(s)', 'Other':'Spec / detail',
+  };
+  specLabel.textContent = specs[type] || 'Caliber / Spec';
+  specInput.placeholder = specs[type] ? `e.g. ${specs[type]}` : 'e.g. 5.56, 1:8 twist';
+}
+
+function sortGear(col) {
+  if (gSortCol === col) gSortDir = gSortDir === 'asc' ? 'desc' : 'asc';
+  else { gSortCol = col; gSortDir = 'asc'; }
+  renderGear();
+}
+
+function renderGear() {
+  const q  = document.getElementById('g-search').value.toLowerCase();
+  const tf = document.getElementById('g-filter-type').value;
+  const cf = document.getElementById('g-filter-condition').value;
+
+  let data = gear.filter(g => {
+    if (q && !['gearType','manufacturer','model','caliber','compatFirearm','location','notes'].some(k => String(g[k]||'').toLowerCase().includes(q))) return false;
+    if (tf && g.gearType !== tf) return false;
+    if (cf && g.condition !== cf) return false;
+    return true;
+  });
+
+  data = data.slice().sort((a, b) => {
+    let av = a[gSortCol] !== undefined ? a[gSortCol] : '';
+    let bv = b[gSortCol] !== undefined ? b[gSortCol] : '';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) { av = an; bv = bn; }
+    else { av = String(av).toLowerCase(); bv = String(bv).toLowerCase(); }
+    if (av < bv) return gSortDir === 'asc' ? -1 : 1;
+    if (av > bv) return gSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const tbody = document.getElementById('gear-tbody');
+  const empty = document.getElementById('gear-empty');
+
+  if (data.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; }
+  else {
+    empty.style.display = 'none';
+    tbody.innerHTML = data.map(g => {
+      // Build a spec detail string from type-specific fields
+      let specDetail = g.caliber || '';
+      if (g.gearType === 'Magazine' && g.capacity) specDetail += (specDetail ? ' · ' : '') + g.capacity + ' rd';
+      if (g.gearType === 'Barrel'   && g.barrelLength) specDetail += (specDetail ? ' · ' : '') + g.barrelLength + '"';
+      if (g.gearType === 'Barrel'   && g.twist)  specDetail += ' ' + g.twist;
+      if (g.gearType === 'Optic'    && g.magnification) specDetail = g.magnification;
+      if (g.gearType === 'Trigger'  && g.pullWeight) specDetail = g.pullWeight;
+      if (g.gearType === 'Light / Laser' && g.lumens) specDetail = g.lumens;
+      return `<tr>
+        <td><span class="gear-type-badge ${gearTypeClass(g.gearType)}">${g.gearType||'—'}</span></td>
+        <td class="td-muted">${g.manufacturer||'—'}</td>
+        <td class="td-bold">${g.model||'—'}</td>
+        <td class="td-mono" style="font-size:11px">${specDetail||'—'}</td>
+        <td class="td-mono" style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent)">${parseInt(g.quantity)||1}</td>
+        <td><span class="${gearCondClass(g.condition)}">${g.condition||'—'}</span></td>
+        <td class="td-muted" style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${g.compatFirearm||''}">${g.compatFirearm||'—'}</td>
+        <td>${g.location ? `<span class="location-tag">${g.location}</span>` : '<span class="td-muted">—</span>'}</td>
+        <td class="td-muted" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${g.notes||''}">${g.notes||''}</td>
+        <td class="td-actions">
+          <button class="btn btn-sm" onclick="openGModal('${g.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteGear('${g.id}')" title="Delete" style="padding:4px 8px">${TRASH_ICON}</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Stats bar
+  const totalQty   = gear.reduce((s, g) => s + (parseInt(g.quantity) || 1), 0);
+  const retireCnt  = gear.filter(g => g.condition === 'Retire').length;
+  const typeCount  = [...new Set(gear.map(g => g.gearType).filter(Boolean))].length;
+  const magCount   = gear.filter(g => g.gearType === 'Magazine').reduce((s, g) => s + (parseInt(g.quantity) || 1), 0);
+  document.getElementById('gear-stats-bar').innerHTML = `
+    <div class="stat"><div class="stat-value">${gear.length}</div><div class="stat-label">Line Items</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${totalQty}</div><div class="stat-label">Total Pieces</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${magCount}</div><div class="stat-label">Magazines</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${typeCount}</div><div class="stat-label">Types</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value ${retireCnt>0?'warn':''}">${retireCnt}</div><div class="stat-label">Needs Replacement</div></div>`;
+
+  updateTabBadges();
+}
+
+function openGModal(id) {
+  gEditId = id || null;
+  document.getElementById('gmodal-title').textContent = id ? 'Edit Gear' : 'Add Gear';
+  // Hide all type-specific fields first
+  ['gear-mag-fields','gear-barrel-fields','gear-optic-fields','gear-trigger-fields','gear-light-fields'].forEach(f => {
+    document.getElementById(f).style.display = 'none';
+  });
+  if (id) {
+    const g = gear.find(x => x.id === id);
+    if (!g) return;
+    document.getElementById('gf-type').value         = g.gearType||'';
+    document.getElementById('gf-manufacturer').value = g.manufacturer||'';
+    document.getElementById('gf-model').value        = g.model||'';
+    document.getElementById('gf-caliber').value      = g.caliber||'';
+    document.getElementById('gf-quantity').value     = g.quantity||'1';
+    document.getElementById('gf-condition').value    = g.condition||'New';
+    document.getElementById('gf-compat').value       = g.compatFirearm||'';
+    document.getElementById('gf-location').value     = g.location||'';
+    document.getElementById('gf-notes').value        = g.notes||'';
+    // Type-specific
+    if (document.getElementById('gf-capacity'))     document.getElementById('gf-capacity').value     = g.capacity||'';
+    if (document.getElementById('gf-variant'))      document.getElementById('gf-variant').value      = g.variant||'';
+    if (document.getElementById('gf-barrel-length'))document.getElementById('gf-barrel-length').value= g.barrelLength||'';
+    if (document.getElementById('gf-profile'))      document.getElementById('gf-profile').value      = g.profile||'';
+    if (document.getElementById('gf-twist'))        document.getElementById('gf-twist').value        = g.twist||'';
+    if (document.getElementById('gf-threading'))    document.getElementById('gf-threading').value    = g.threading||'';
+    if (document.getElementById('gf-magnification'))document.getElementById('gf-magnification').value= g.magnification||'';
+    if (document.getElementById('gf-reticle'))      document.getElementById('gf-reticle').value      = g.reticle||'';
+    if (document.getElementById('gf-mount'))        document.getElementById('gf-mount').value        = g.mount||'';
+    if (document.getElementById('gf-zero'))         document.getElementById('gf-zero').value         = g.zeroDistance||'';
+    if (document.getElementById('gf-pull'))         document.getElementById('gf-pull').value         = g.pullWeight||'';
+    if (document.getElementById('gf-platform'))     document.getElementById('gf-platform').value     = g.platform||'';
+    if (document.getElementById('gf-lumens'))       document.getElementById('gf-lumens').value       = g.lumens||'';
+    if (document.getElementById('gf-battery'))      document.getElementById('gf-battery').value      = g.battery||'';
+    if (document.getElementById('gf-rail'))         document.getElementById('gf-rail').value         = g.railMount||'';
+    if (document.getElementById('gf-switch'))       document.getElementById('gf-switch').value       = g.pressureSwitch||'';
+    updateGearFields();
+  } else {
+    ['gf-manufacturer','gf-model','gf-caliber','gf-compat','gf-location','gf-notes',
+     'gf-capacity','gf-variant','gf-barrel-length','gf-twist','gf-threading',
+     'gf-magnification','gf-reticle','gf-mount','gf-zero','gf-pull','gf-platform',
+     'gf-lumens','gf-battery','gf-rail','gf-switch'].forEach(i => {
+       const el = document.getElementById(i); if (el) el.value = '';
+     });
+    document.getElementById('gf-type').value      = '';
+    document.getElementById('gf-quantity').value  = '1';
+    document.getElementById('gf-condition').value = 'New';
+    if (document.getElementById('gf-profile')) document.getElementById('gf-profile').value = '';
+  }
+  document.getElementById('gear-modal').classList.add('open');
+  setTimeout(() => document.getElementById('gf-type').focus(), 50);
+}
+
+function closeGModal() { document.getElementById('gear-modal').classList.remove('open'); gEditId = null; }
+
+async function saveGear() {
+  const gearType = document.getElementById('gf-type').value;
+  const model    = document.getElementById('gf-model').value.trim();
+  const mfr      = document.getElementById('gf-manufacturer').value.trim();
+  if (!gearType && !model && !mfr) { alert('Please enter at minimum a Type or Model.'); return; }
+
+  const getVal = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+
+  const entry = {
+    id:             gEditId || crypto.randomUUID(),
+    gearType,
+    manufacturer:   mfr,
+    model,
+    caliber:        getVal('gf-caliber'),
+    quantity:       document.getElementById('gf-quantity').value || '1',
+    condition:      document.getElementById('gf-condition').value,
+    compatFirearm:  getVal('gf-compat'),
+    location:       getVal('gf-location'),
+    notes:          getVal('gf-notes'),
+    // Magazine
+    capacity:       getVal('gf-capacity'),
+    variant:        getVal('gf-variant'),
+    // Barrel
+    barrelLength:   getVal('gf-barrel-length'),
+    profile:        getVal('gf-profile'),
+    twist:          getVal('gf-twist'),
+    threading:      getVal('gf-threading'),
+    // Optic
+    magnification:  getVal('gf-magnification'),
+    reticle:        getVal('gf-reticle'),
+    mount:          getVal('gf-mount'),
+    zeroDistance:   getVal('gf-zero'),
+    // Trigger
+    pullWeight:     getVal('gf-pull'),
+    platform:       getVal('gf-platform'),
+    // Light
+    lumens:         getVal('gf-lumens'),
+    battery:        getVal('gf-battery'),
+    railMount:      getVal('gf-rail'),
+    pressureSwitch: getVal('gf-switch'),
+    updatedAt:      new Date().toISOString(),
+  };
+  if (!gEditId) entry.createdAt = entry.updatedAt;
+  await dbPut('gear', entry);
+  gear = await dbGetAll('gear');
+  closeGModal(); renderGear();
+}
+
+async function deleteGear(id) {
+  if (!confirm('Remove this item from gear inventory?')) return;
+  await dbDelete('gear', id);
+  gear = await dbGetAll('gear');
+  renderGear();
+}
+
+function exportGearCSV() {
+  const hdrs = ['Type','Manufacturer','Model','Caliber / Spec','Quantity','Condition','Compatible Firearm','Location','Notes','Capacity','Barrel Length','Profile','Twist','Threading','Magnification','Reticle','Mount','Zero','Pull Weight','Lumens'];
+  const rows = gear.map(g => [
+    g.gearType, g.manufacturer, g.model, g.caliber, g.quantity, g.condition,
+    g.compatFirearm, g.location, g.notes, g.capacity, g.barrelLength,
+    g.profile, g.twist, g.threading, g.magnification, g.reticle,
+    g.mount, g.zeroDistance, g.pullWeight, g.lumens,
+  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`));
+  const csv = [hdrs.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = `armory_gear_${new Date().toISOString().slice(0,10)}.csv`; a.click();
+}
+
+function exportGearPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+  const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+  const ts = new Date().toISOString().slice(0,10);
+
+  const totalQty  = gear.reduce((s, g) => s + (parseInt(g.quantity)||1), 0);
+  const retireCnt = gear.filter(g => g.condition === 'Retire').length;
+  const magCount  = gear.filter(g => g.gearType === 'Magazine').reduce((s, g) => s + (parseInt(g.quantity)||1), 0);
+
+  // Header bar
+  doc.setFillColor(20, 21, 24);
+  doc.rect(0, 0, doc.internal.pageSize.getWidth(), 48, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(200, 169, 110);
+  doc.text('ARMORY', 36, 30);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(122, 125, 133);
+  doc.text('GEAR & ACCESSORIES INVENTORY', 36, 42);
+  doc.text('Generated: ' + dateStr, doc.internal.pageSize.getWidth() - 36, 30, { align: 'right' });
+  doc.text(
+    `Line Items: ${gear.length}  |  Total Pieces: ${totalQty}  |  Magazines: ${magCount}  |  Needs Replacement: ${retireCnt}`,
+    doc.internal.pageSize.getWidth() - 36, 42, { align: 'right' }
+  );
+
+  doc.autoTable({
+    startY: 60,
+    head: [['Type','Manufacturer','Model','Caliber / Spec','Qty','Condition','Compatible Firearm','Location','Notes']],
+    body: gear.map(g => {
+      let specDetail = g.caliber || '';
+      if (g.gearType === 'Magazine'     && g.capacity)      specDetail += (specDetail ? ' · ' : '') + g.capacity + ' rd';
+      if (g.gearType === 'Barrel'       && g.barrelLength)  specDetail += (specDetail ? ' · ' : '') + g.barrelLength + '"';
+      if (g.gearType === 'Barrel'       && g.twist)         specDetail += ' ' + g.twist;
+      if (g.gearType === 'Optic'        && g.magnification) specDetail = g.magnification;
+      if (g.gearType === 'Trigger'      && g.pullWeight)    specDetail = g.pullWeight;
+      if (g.gearType === 'Light / Laser'&& g.lumens)        specDetail = g.lumens;
+      return [
+        g.gearType || '',
+        g.manufacturer || '',
+        g.model || '',
+        specDetail,
+        parseInt(g.quantity) || 1,
+        g.condition || '',
+        g.compatFirearm || '',
+        g.location || '',
+        g.notes || '',
+      ];
+    }),
+    styles: {
+      font: 'helvetica',
+      fontSize: 8,
+      cellPadding: 5,
+      textColor: [232, 230, 224],
+      fillColor: [20, 21, 24],
+      lineColor: [42, 45, 51],
+      lineWidth: 0.5,
+    },
+    headStyles: {
+      fillColor: [28, 30, 34],
+      textColor: [122, 125, 133],
+      fontSize: 7,
+      fontStyle: 'bold',
+    },
+    alternateRowStyles: { fillColor: [13, 14, 16] },
+    columnStyles: {
+      0: { cellWidth: 68 },
+      1: { cellWidth: 72 },
+      2: { cellWidth: 80 },
+      3: { cellWidth: 72 },
+      4: { cellWidth: 28 },
+      5: { cellWidth: 54 },
+      6: { cellWidth: 90 },
+      7: { cellWidth: 60 },
+      8: { cellWidth: 'auto' },
+    },
+    didParseCell(data) {
+      if (data.section === 'body' && data.column.index === 5) {
+        const v = data.cell.raw;
+        if (v === 'New')    data.cell.styles.textColor = [94, 184, 122];
+        else if (v === 'Good')   data.cell.styles.textColor = [200, 169, 110];
+        else if (v === 'Worn')   data.cell.styles.textColor = [212, 137, 58];
+        else if (v === 'Retire') data.cell.styles.textColor = [224, 85, 85];
+      }
+    },
+    margin: { left: 36, right: 36 },
+  });
+
+  // Page numbers
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7);
+    doc.setTextColor(85, 88, 96);
+    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 16, { align: 'center' });
+    doc.text('ARMORY // PERSONAL REGISTRY — CONFIDENTIAL', 36, doc.internal.pageSize.getHeight() - 16);
+  }
+
+  doc.save(`armory_gear_${ts}.pdf`);
+}
+
+/* ═══════════════════════════
+   DOCUMENTS
+═══════════════════════════ */
+let dEditId = null;
+let dSortCol = 'docDate', dSortDir = 'desc';
+let pendingDocFile = null;
+let removedDocFile = false;
+
+const DOC_CATEGORIES = {
+  'Government / ATF': 'doc-cat-atf',
+  'Permits & Licenses': 'doc-cat-permit',
+  'Trust Documents': 'doc-cat-trust',
+  'Purchase Records': 'doc-cat-purchase',
+  'Insurance': 'doc-cat-insurance',
+  'Other': 'doc-cat-other',
+};
+
+function docCatClass(cat) { return DOC_CATEGORIES[cat] || 'doc-cat-other'; }
+
+function sortDocs(col) {
+  if (dSortCol === col) dSortDir = dSortDir === 'asc' ? 'desc' : 'asc';
+  else { dSortCol = col; dSortDir = 'asc'; }
+  renderDocs();
+}
+
+function isExpiringSoon(dateStr) {
+  if (!dateStr) return false;
+  const diff = new Date(dateStr) - new Date();
+  return diff > 0 && diff < 90 * 24 * 60 * 60 * 1000; // within 90 days
+}
+
+function isExpired(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr) < new Date();
+}
+
+async function renderDocs() {
+  const q  = document.getElementById('d-search').value.toLowerCase();
+  const cf = document.getElementById('d-filter-category').value;
+
+  let data = docs.filter(d => {
+    if (q && !['name','category','notes'].some(k => String(d[k]||'').toLowerCase().includes(q))) return false;
+    if (cf && d.category !== cf) return false;
+    return true;
+  });
+
+  data = data.slice().sort((a, b) => {
+    let av = a[dSortCol] || '', bv = b[dSortCol] || '';
+    av = String(av).toLowerCase(); bv = String(bv).toLowerCase();
+    if (av < bv) return dSortDir === 'asc' ? -1 : 1;
+    if (av > bv) return dSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // update sort indicators
+  document.querySelectorAll('#docs-table th').forEach(t => t.classList.remove('sorted','desc'));
+
+  const tbody = document.getElementById('docs-tbody');
+  const empty = document.getElementById('docs-empty');
+
+  if (data.length === 0) { tbody.innerHTML = ''; empty.style.display = 'block'; }
+  else {
+    empty.style.display = 'none';
+    tbody.innerHTML = data.map(d => {
+      const expiredCls  = isExpired(d.expiryDate) ? 'color:var(--danger)' : isExpiringSoon(d.expiryDate) ? 'color:var(--warning)' : '';
+      const expiryDisp  = d.expiryDate ? `<span style="${expiredCls}">${d.expiryDate}${isExpired(d.expiryDate)?' ⚠':''}${isExpiringSoon(d.expiryDate)?' ⚡':''}</span>` : '<span style="color:var(--muted2)">—</span>';
+      return `<tr>
+        <td class="td-bold">${d.name||'—'}</td>
+        <td><span class="doc-category-badge ${docCatClass(d.category)}">${d.category||'—'}</span></td>
+        <td class="td-mono">${d.docDate||'<span style="color:var(--muted2)">—</span>'}</td>
+        <td class="td-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.notes||''}">${d.notes||''}</td>
+        <td class="td-mono">${expiryDisp}</td>
+        <td id="docfile-cell-${d.id}"><span style="color:var(--muted2);font-size:11px">—</span></td>
+        <td class="td-actions">
+          <button class="btn btn-sm" onclick="openDModal('${d.id}')">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteDoc('${d.id}')" title="Delete" style="padding:4px 8px">${TRASH_ICON}</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Async fill file buttons
+    for (const d of data) {
+      const cell = document.getElementById(`docfile-cell-${d.id}`);
+      if (!cell) continue;
+      const file = await dbGet('docfiles', d.id);
+      if (file) {
+        cell.innerHTML = `<button class="doc-file-btn" onclick="viewDocFile('${d.id}')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${file.name.length > 18 ? file.name.slice(0,16)+'…' : file.name}
+        </button>`;
+      }
+    }
+  }
+
+  // Stats bar
+  const expiredCnt  = docs.filter(d => isExpired(d.expiryDate)).length;
+  const expiringSoon = docs.filter(d => isExpiringSoon(d.expiryDate)).length;
+  const cats = [...new Set(docs.map(d => d.category).filter(Boolean))].length;
+  document.getElementById('docs-stats-bar').innerHTML = `
+    <div class="stat"><div class="stat-value">${docs.length}</div><div class="stat-label">Total Documents</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value">${cats}</div><div class="stat-label">Categories</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value ${expiringSoon>0?'warn':''}">${expiringSoon}</div><div class="stat-label">Expiring Soon</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-value ${expiredCnt>0?'warn':''}">${expiredCnt}</div><div class="stat-label">Expired</div></div>`;
+
+  updateTabBadges();
+}
+
+function triggerDocFile() { document.getElementById('df-file').click(); }
+
+function handleDocFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  pendingDocFile = file;
+  removedDocFile = false;
+  const slot  = document.getElementById('doc-slot');
+  slot.classList.add('has-file');
+  const nameEl = document.getElementById('doc-slot-name');
+  nameEl.textContent = file.name; nameEl.style.display = 'block';
+  slot.querySelector('.attach-slot-icon').style.display  = 'none';
+  slot.querySelector('.attach-slot-label').style.display = 'none';
+}
+
+function clearDocSlot() {
+  pendingDocFile  = null;
+  removedDocFile  = true;
+  const slot = document.getElementById('doc-slot');
+  slot.classList.remove('has-file');
+  document.getElementById('doc-slot-name').style.display = 'none';
+  slot.querySelector('.attach-slot-icon').style.display  = '';
+  slot.querySelector('.attach-slot-label').style.display = '';
+  document.getElementById('df-file').value = '';
+}
+
+function resetDocSlot() {
+  pendingDocFile = null; removedDocFile = false;
+  const slot = document.getElementById('doc-slot');
+  if (!slot) return;
+  slot.classList.remove('has-file');
+  document.getElementById('doc-slot-name').style.display = 'none';
+  const icon  = slot.querySelector('.attach-slot-icon');
+  const label = slot.querySelector('.attach-slot-label');
+  if (icon)  icon.style.display  = '';
+  if (label) label.style.display = '';
+  document.getElementById('df-file').value = '';
+}
+
+async function openDModal(id) {
+  dEditId = id || null;
+  resetDocSlot();
+  document.getElementById('dmodal-title').textContent = id ? 'Edit Document' : 'Add Document';
+  if (id) {
+    const d = docs.find(x => x.id === id);
+    if (!d) return;
+    document.getElementById('df-name').value     = d.name||'';
+    document.getElementById('df-category').value = d.category||'';
+    document.getElementById('df-date').value      = d.docDate||'';
+    document.getElementById('df-expiry').value    = d.expiryDate||'';
+    document.getElementById('df-notes').value     = d.notes||'';
+    // Load existing file into slot if present
+    const file = await dbGet('docfiles', id);
+    if (file) {
+      const slot = document.getElementById('doc-slot');
+      slot.classList.add('has-file');
+      const nameEl = document.getElementById('doc-slot-name');
+      nameEl.textContent = file.name; nameEl.style.display = 'block';
+      slot.querySelector('.attach-slot-icon').style.display  = 'none';
+      slot.querySelector('.attach-slot-label').style.display = 'none';
+    }
+  } else {
+    ['df-name','df-date','df-expiry','df-notes'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('df-category').value = '';
+  }
+  document.getElementById('docs-modal').classList.add('open');
+  setTimeout(() => document.getElementById('df-name').focus(), 50);
+}
+
+function closeDModal() { document.getElementById('docs-modal').classList.remove('open'); dEditId = null; resetDocSlot(); }
+
+async function saveDoc() {
+  const name = document.getElementById('df-name').value.trim();
+  if (!name) { alert('Please enter a document name.'); return; }
+  const entry = {
+    id:         dEditId || crypto.randomUUID(),
+    name,
+    category:   document.getElementById('df-category').value,
+    docDate:    document.getElementById('df-date').value,
+    expiryDate: document.getElementById('df-expiry').value,
+    notes:      document.getElementById('df-notes').value.trim(),
+    updatedAt:  new Date().toISOString(),
+  };
+  if (!dEditId) entry.createdAt = entry.updatedAt;
+  await dbPut('documents', entry);
+
+  // Handle file
+  if (pendingDocFile) {
+    const buf = await pendingDocFile.arrayBuffer();
+    await dbPut('docfiles', { id: entry.id, name: pendingDocFile.name, mime: pendingDocFile.type, data: buf });
+  } else if (removedDocFile) {
+    await dbDelete('docfiles', entry.id);
+  }
+
+  docs = await dbGetAll('documents');
+  closeDModal(); renderDocs();
+}
+
+async function deleteDoc(id) {
+  if (!confirm('Remove this document and its attached file?')) return;
+  await dbDelete('documents', id);
+  await dbDelete('docfiles', id);
+  docs = await dbGetAll('documents');
+  renderDocs();
+}
+
+async function viewDocFile(id) {
+  const file = await dbGet('docfiles', id);
+  if (!file) { alert('No file attached.'); return; }
+
+  viewerObjectURLs.forEach(u => URL.revokeObjectURL(u));
+  viewerObjectURLs = [];
+  const blob = new Blob([file.data], { type: file.mime });
+  const url  = URL.createObjectURL(blob);
+  viewerObjectURLs.push(url);
+
+  const img    = document.getElementById('viewer-img');
+  const iframe = document.getElementById('viewer-iframe');
+  const label  = document.getElementById('viewer-label');
+  const dlBtn  = document.getElementById('viewer-download');
+
+  label.textContent = file.name;
+  dlBtn.href        = url;
+  dlBtn.download    = file.name;
+
+  if (file.mime === 'application/pdf') {
+    img.style.display    = 'none';
+    iframe.style.display = 'block';
+    iframe.src           = url;
+  } else {
+    iframe.style.display = 'none';
+    img.style.display    = 'block';
+    img.src              = url;
+  }
+  document.getElementById('viewer-overlay').classList.add('open');
+}
+
+/* ═══════════════════════════
+   HELP MODAL
+═══════════════════════════ */
+function openHelp()  { document.getElementById('help-modal').classList.add('open'); }
+function closeHelp() { document.getElementById('help-modal').classList.remove('open'); }
+
+/* ═══════════════════════════
+   KEYBOARD
+═══════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeFModal(); closeAModal(); closeDModal(); closeGModal(); closeHelp(); closeViewer(); }
+  if ((e.ctrlKey||e.metaKey)&&e.key==='n') {
+    e.preventDefault();
+    if (currentPage==='firearms') openFModal();
+    else if (currentPage==='ammo') openAModal();
+    else if (currentPage==='docs') openDModal();
+    else if (currentPage==='gear') openGModal();
+  }
+});
+
+/* ═══════════════════════════
+   INIT
+═══════════════════════════ */
+(async () => {
+  await openDB();
+  await loadAll();
+
+  document.getElementById('hero-date').textContent =
+    new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
+
+  updateTabBadges();
+  updateHome();
+
+  document.getElementById('header-actions').innerHTML = `
+    <button class="btn" onclick="showPage('firearms')">Firearms</button>
+    <button class="btn" onclick="showPage('ammo')">Ammo</button>
+    <button class="btn" onclick="showPage('docs')">Documents</button>
+    <button class="btn" onclick="showPage('gear')">Gear</button>`;
+})();
+</script>
+<!-- ══════════════════════════════════
+     FOOTER
+══════════════════════════════════ -->
+<footer style="
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 14px 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+">
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted2)">
+    © 2026 NCTSI
+  </span>
+  <span style="color:var(--border2);font-size:10px">|</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.5px;color:var(--muted2)">
+    Nextgen Cloud Technology Solutions &amp; Innovation
+  </span>
+  <span style="color:var(--border2);font-size:10px">|</span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.5px;color:var(--muted2)">
+    Privacy Protocol
+  </span>
+</footer>
+
+</body>
+</html>
