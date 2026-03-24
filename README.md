@@ -6,9 +6,9 @@ Armory is built as a single-file web app and can run in a browser, Docker contai
 
 ## Download Installers
 
-- Latest release: https://github.com/jasweaver/armory-v5/releases/latest
-- macOS DMG: https://github.com/jasweaver/armory-v5/releases/download/v1.0.0/Armory-1.0.0.dmg
-- Windows EXE: https://github.com/jasweaver/armory-v5/releases/download/v1.0.0/Armory-Setup-1.0.0.exe
+- Latest release: https://github.com/jasweaver/armory/releases/latest
+- macOS DMG: https://github.com/jasweaver/armory/releases/download/v1.0.0/Armory-1.0.0.dmg
+- Windows EXE: https://github.com/jasweaver/armory/releases/download/v1.0.0/Armory-Setup-1.0.0.exe
 
 Note: current installers are unsigned test builds and may show OS security prompts on first launch.
 
