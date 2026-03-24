@@ -704,6 +704,15 @@
     display: flex; gap: 10px; align-items: center;
   }
 
+  .viewer-counter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    min-width: 42px;
+    text-align: center;
+  }
+
   .viewer-label {
     font-family: 'IBM Plex Mono', monospace; font-size: 11px;
     color: var(--muted); letter-spacing: 1px;
@@ -1442,6 +1451,9 @@
 <div class="viewer-overlay" id="viewer-overlay" onclick="if(event.target===this)closeViewer()">
   <div class="viewer-toolbar">
     <span class="viewer-label" id="viewer-label"></span>
+    <button class="btn btn-sm" id="viewer-prev" style="display:none" onclick="viewerPrev()">Prev</button>
+    <span class="viewer-counter" id="viewer-counter" style="display:none"></span>
+    <button class="btn btn-sm" id="viewer-next" style="display:none" onclick="viewerNext()">Next</button>
     <a id="viewer-download" class="btn btn-sm" download>Download</a>
     <button class="btn btn-sm" onclick="closeViewer()">Close</button>
   </div>
@@ -2991,8 +3003,53 @@ function updateTabBadges() {
    MEDIA VIEWER
 ═══════════════════════════ */
 let viewerObjectURLs = [];
+let viewerQueue = [];
+let viewerQueueIndex = -1;
 
-async function viewMedia(firearmId, type) {
+function updateViewerNav() {
+  const prevBtn = document.getElementById('viewer-prev');
+  const nextBtn = document.getElementById('viewer-next');
+  const counter = document.getElementById('viewer-counter');
+  if (!prevBtn || !nextBtn || !counter) return;
+
+  const showNav = viewerQueue.length > 1;
+  prevBtn.style.display = showNav ? '' : 'none';
+  nextBtn.style.display = showNav ? '' : 'none';
+  counter.style.display = showNav ? '' : 'none';
+  counter.textContent = showNav ? `${viewerQueueIndex + 1}/${viewerQueue.length}` : '';
+}
+
+async function openViewerQueue(items) {
+  if (!items || items.length === 0) return;
+  viewerQueue = items;
+  viewerQueueIndex = 0;
+  await viewMedia(items[0].entityId, items[0].type, true);
+  updateViewerNav();
+}
+
+async function viewerPrev() {
+  if (viewerQueue.length < 2) return;
+  viewerQueueIndex = (viewerQueueIndex - 1 + viewerQueue.length) % viewerQueue.length;
+  const cur = viewerQueue[viewerQueueIndex];
+  await viewMedia(cur.entityId, cur.type, true);
+  updateViewerNav();
+}
+
+async function viewerNext() {
+  if (viewerQueue.length < 2) return;
+  viewerQueueIndex = (viewerQueueIndex + 1) % viewerQueue.length;
+  const cur = viewerQueue[viewerQueueIndex];
+  await viewMedia(cur.entityId, cur.type, true);
+  updateViewerNav();
+}
+
+async function viewMedia(firearmId, type, preserveQueue = false) {
+  if (!preserveQueue) {
+    viewerQueue = [];
+    viewerQueueIndex = -1;
+    updateViewerNav();
+  }
+
   const m = await getMedia(firearmId, type);
   if (!m) { alert('File not found.'); return; }
 
@@ -3035,10 +3092,11 @@ async function viewMedia(firearmId, type) {
 }
 
 async function openAttachViewer(firearmId) {
-  // Open first available photo
   const summary = await getMediaSummary(firearmId);
-  if (summary.photo1) await viewMedia(firearmId, 'photo1');
-  else if (summary.photo2) await viewMedia(firearmId, 'photo2');
+  const items = [];
+  if (summary.photo1) items.push({ entityId: firearmId, type: 'photo1' });
+  if (summary.photo2) items.push({ entityId: firearmId, type: 'photo2' });
+  await openViewerQueue(items);
 }
 
 function closeViewer() {
@@ -3049,6 +3107,9 @@ function closeViewer() {
   iframe.src = '';
   viewerObjectURLs.forEach(u => URL.revokeObjectURL(u));
   viewerObjectURLs = [];
+  viewerQueue = [];
+  viewerQueueIndex = -1;
+  updateViewerNav();
 }
 
 /* ═══════════════════════════
@@ -3227,8 +3288,10 @@ async function loadSlotsForGear(gearId) {
 
 async function openGearAttachViewer(gearId) {
   const summary = await getGearMediaSummary(gearId);
-  if (summary.gear_photo1) await viewMedia(gearId, 'gear_photo1');
-  else if (summary.gear_photo2) await viewMedia(gearId, 'gear_photo2');
+  const items = [];
+  if (summary.gear_photo1) items.push({ entityId: gearId, type: 'gear_photo1' });
+  if (summary.gear_photo2) items.push({ entityId: gearId, type: 'gear_photo2' });
+  await openViewerQueue(items);
 }
 
 async function renderGear() {
@@ -3800,6 +3863,10 @@ async function viewDocFile(id) {
   const file = await dbGet('docfiles', id);
   if (!file) { alert('No file attached.'); return; }
 
+  viewerQueue = [];
+  viewerQueueIndex = -1;
+  updateViewerNav();
+
   viewerObjectURLs.forEach(u => URL.revokeObjectURL(u));
   viewerObjectURLs = [];
   const blob = new Blob([file.data], { type: file.mime });
@@ -3845,6 +3912,10 @@ function closeHelp() { document.getElementById('help-modal').classList.remove('o
    KEYBOARD
 ═══════════════════════════ */
 document.addEventListener('keydown', e => {
+  if (document.getElementById('viewer-overlay').classList.contains('open')) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); viewerPrev(); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); viewerNext(); }
+  }
   if (e.key==='Escape') { closeFModal(); closeAModal(); closeDModal(); closeGModal(); closeHelp(); closeViewer(); }
   if ((e.ctrlKey||e.metaKey)&&e.key==='n') {
     e.preventDefault();
