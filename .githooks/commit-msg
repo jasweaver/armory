@@ -1,0 +1,82 @@
+#!/bin/bash
+# Git commit-msg hook - Enforce issue references and conventional commits
+# Install: cp hooks/commit-msg .git/hooks/ && chmod +x .git/hooks/commit-msg
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Colors
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+# Configuration - set to "true" to enforce conventional commits
+ENFORCE_CONVENTIONAL="${ENFORCE_CONVENTIONAL:-true}"
+
+# Skip merge commits and fixups
+if echo "$COMMIT_MSG" | grep -qE "^(Merge|fixup!|squash!|amend!)"; then
+    exit 0
+fi
+
+# Check for issue reference (#123 pattern)
+if ! echo "$COMMIT_MSG" | grep -qE "#[0-9]+"; then
+    echo ""
+    echo -e "${RED}❌ Commit rejected: No issue reference found${NC}"
+    echo ""
+    echo "All commits must reference an issue using #<number>"
+    echo ""
+    echo "Examples:"
+    echo "  git commit -m \"fix: resolve login bug #45\""
+    echo "  git commit -m \"feat: add user dashboard #123\""
+    echo "  git commit -m \"docs: update README #12\""
+    echo ""
+    echo -e "${YELLOW}If this is initial setup or no issue exists:${NC}"
+    echo "  1. Create an issue first: gh issue create --title \"Your work\""
+    echo "  2. Or use --no-verify to bypass (use sparingly):"
+    echo "     git commit -m \"your message\" --no-verify"
+    echo ""
+    exit 1
+fi
+
+# Validate conventional commit format
+# Pattern: type(scope)?: description #issue
+CONVENTIONAL_PATTERN="^(feat|fix|docs|style|refactor|test|chore|build|ci|perf|revert)(\(.+\))?(!)?: .+"
+
+if ! echo "$COMMIT_MSG" | grep -qE "$CONVENTIONAL_PATTERN"; then
+    echo ""
+    if [ "$ENFORCE_CONVENTIONAL" = "true" ]; then
+        echo -e "${RED}❌ Commit rejected: Invalid conventional commit format${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Warning: Commit doesn't follow conventional format${NC}"
+    fi
+    echo ""
+    echo "Required format: <type>: <description> #<issue>"
+    echo ""
+    echo "Types:"
+    echo "  feat:     New feature"
+    echo "  fix:      Bug fix"
+    echo "  docs:     Documentation only"
+    echo "  style:    Formatting (no code change)"
+    echo "  refactor: Code refactoring"
+    echo "  test:     Adding/updating tests"
+    echo "  chore:    Maintenance tasks"
+    echo "  build:    Build system changes"
+    echo "  ci:       CI/CD changes"
+    echo "  perf:     Performance improvements"
+    echo "  revert:   Reverting changes"
+    echo ""
+    echo "Examples:"
+    echo "  feat: add user authentication #45"
+    echo "  fix(auth): resolve token expiry issue #67"
+    echo "  docs: update API documentation #12"
+    echo ""
+    
+    if [ "$ENFORCE_CONVENTIONAL" = "true" ]; then
+        echo -e "${YELLOW}To disable enforcement: ENFORCE_CONVENTIONAL=false git commit ...${NC}"
+        exit 1
+    fi
+fi
+
+echo -e "${GREEN}✅ Commit message validated${NC}"
+exit 0
