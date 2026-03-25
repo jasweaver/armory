@@ -1,0 +1,101 @@
+#!/bin/bash
+# Pre-push hook - Checks PR size before push
+# Warns when changes exceed threshold
+
+set -e
+
+# Configuration
+MAX_LINES_ADDED=500
+MAX_FILES_CHANGED=20
+WARN_LINES=300
+WARN_FILES=15
+
+# Colors
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+# Get the remote and branch being pushed to
+remote="$1"
+url="$2"
+
+# Read stdin for ref information
+while read local_ref local_sha remote_ref remote_sha; do
+    # Skip if deleting branch
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+        continue
+    fi
+    
+    # Get the merge base (common ancestor with main)
+    MAIN_BRANCH="main"
+    if ! git rev-parse --verify "$MAIN_BRANCH" > /dev/null 2>&1; then
+        MAIN_BRANCH="master"
+    fi
+    
+    MERGE_BASE=$(git merge-base "$MAIN_BRANCH" "$local_sha" 2>/dev/null || echo "$remote_sha")
+    
+    # If remote_sha is all zeros, this is a new branch
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        DIFF_BASE="$MERGE_BASE"
+    else
+        DIFF_BASE="$remote_sha"
+    fi
+    
+    # Calculate diff stats
+    STATS=$(git diff --stat "$DIFF_BASE" "$local_sha" 2>/dev/null | tail -1)
+    
+    # Parse stats
+    FILES_CHANGED=$(echo "$STATS" | grep -oE '[0-9]+ files? changed' | grep -oE '[0-9]+' || echo "0")
+    LINES_ADDED=$(echo "$STATS" | grep -oE '[0-9]+ insertions?' | grep -oE '[0-9]+' || echo "0")
+    LINES_DELETED=$(echo "$STATS" | grep -oE '[0-9]+ deletions?' | grep -oE '[0-9]+' || echo "0")
+    
+    # Get branch name for context
+    BRANCH_NAME=$(echo "$local_ref" | sed 's|refs/heads/||')
+    
+    # Skip main/master branches
+    if [[ "$BRANCH_NAME" == "main" ]] || [[ "$BRANCH_NAME" == "master" ]]; then
+        continue
+    fi
+    
+    echo ""
+    echo "📊 PR Size Check for $BRANCH_NAME"
+    echo "   Files changed: $FILES_CHANGED"
+    echo "   Lines added:   $LINES_ADDED"
+    echo "   Lines deleted: $LINES_DELETED"
+    
+    # Check thresholds
+    BLOCKED=false
+    
+    if [ "$LINES_ADDED" -gt "$MAX_LINES_ADDED" ] 2>/dev/null; then
+        echo ""
+        echo -e "${RED}❌ PR too large: $LINES_ADDED lines added (max: $MAX_LINES_ADDED)${NC}"
+        echo -e "${RED}   Consider splitting into smaller PRs for easier review.${NC}"
+        BLOCKED=true
+    elif [ "$LINES_ADDED" -gt "$WARN_LINES" ] 2>/dev/null; then
+        echo ""
+        echo -e "${YELLOW}⚠️  Large PR: $LINES_ADDED lines added${NC}"
+        echo -e "${YELLOW}   Consider splitting if possible.${NC}"
+    fi
+    
+    if [ "$FILES_CHANGED" -gt "$MAX_FILES_CHANGED" ] 2>/dev/null; then
+        echo ""
+        echo -e "${RED}❌ Too many files: $FILES_CHANGED files changed (max: $MAX_FILES_CHANGED)${NC}"
+        echo -e "${RED}   Consider splitting into smaller PRs.${NC}"
+        BLOCKED=true
+    elif [ "$FILES_CHANGED" -gt "$WARN_FILES" ] 2>/dev/null; then
+        echo ""
+        echo -e "${YELLOW}⚠️  Many files changed: $FILES_CHANGED${NC}"
+    fi
+    
+    if $BLOCKED; then
+        echo ""
+        echo -e "${RED}Push blocked. To bypass: git push --no-verify${NC}"
+        echo ""
+        exit 1
+    else
+        echo -e "${GREEN}✅ Size OK${NC}"
+    fi
+done
+
+exit 0

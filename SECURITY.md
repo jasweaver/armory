@@ -25,7 +25,7 @@ You should receive an acknowledgement within a few business days.
 - Dependabot security updates are enabled.
 - Automated security fixes are enabled.
 - Secret scanning and push protection are enabled.
-- CodeQL analysis is configured in `.github/workflows/codeql.yml`.
+- CodeQL default setup is enabled in repository security settings.
 
 ## Security Notes
 

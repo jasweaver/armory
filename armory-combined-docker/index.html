@@ -609,6 +609,74 @@
   }
   .help-note strong { color: var(--accent); font-weight: 500; }
 
+  .help-oal-details {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--bg2);
+    overflow: hidden;
+  }
+
+  .help-oal-details > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 10px 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(200,169,110,.07);
+    border-bottom: 1px solid transparent;
+  }
+
+  .help-oal-details[open] > summary { border-bottom-color: var(--border); }
+  .help-oal-details > summary::-webkit-details-marker { display: none; }
+
+  .help-oal-table-wrap { overflow-x: auto; }
+  .help-oal-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 560px; }
+  .help-oal-table thead tr { border-bottom: 1px solid var(--border2); }
+  .help-oal-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 6px 8px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .help-oal-table td { padding: 6px 8px; color: var(--text); border-bottom: 1px solid var(--border); line-height: 1.3; }
+  .help-oal-table tbody tr:last-child td { border-bottom: none; }
+  .help-oal-row-sbr td:first-child { border-left: 2px solid var(--danger); padding-left: 8px; }
+  .help-oal-row-rifle td:first-child { border-left: 2px solid var(--info); padding-left: 8px; }
+  .help-oal-status-sbr { color: #f28f8f; }
+  .help-oal-status-rifle { color: var(--success); }
+  .help-oal-warn {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #ffb4b4;
+    background: rgba(224,85,85,.2);
+    border: 1px solid rgba(224,85,85,.35);
+    border-radius: 2px;
+    padding: 1px 5px;
+  }
+
+  .field-help-link {
+    margin-left: 8px;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0;
+  }
+  .field-help-link:hover { color: var(--accent2); }
+
   /* ════════════════════════════════
      ATTACHMENT UI
   ════════════════════════════════ */
@@ -1788,6 +1856,43 @@
           </div>
         </div>
 
+        <details class="help-oal-details" id="help-oal-quick-chart">
+          <summary>AR-15 OAL Quick Chart (M4 Stock Baseline)</summary>
+          <div class="help-oal-table-wrap">
+            <table class="help-oal-table">
+              <thead>
+                <tr>
+                  <th>Barrel</th>
+                  <th>Status</th>
+                  <th>Collapsed</th>
+                  <th>Extended (Form 1)</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="help-oal-row-sbr"><td>7.0"</td><td class="help-oal-status-sbr">SBR / NFA</td><td><span class="help-oal-warn">23.75" under 26"</span></td><td>26.75"</td><td>Very compact SBR</td></tr>
+                <tr class="help-oal-row-sbr"><td>7.5"</td><td class="help-oal-status-sbr">SBR / NFA</td><td><span class="help-oal-warn">24.25" under 26"</span></td><td>27.25"</td><td></td></tr>
+                <tr class="help-oal-row-sbr"><td>8.0"</td><td class="help-oal-status-sbr">SBR / NFA</td><td><span class="help-oal-warn">24.75" under 26"</span></td><td>27.75"</td><td></td></tr>
+                <tr class="help-oal-row-sbr"><td>8.5"</td><td class="help-oal-status-sbr">SBR / NFA</td><td><span class="help-oal-warn">25.25" under 26"</span></td><td>28.25"</td><td></td></tr>
+                <tr class="help-oal-row-sbr"><td>9.0"</td><td class="help-oal-status-sbr">SBR / NFA</td><td><span class="help-oal-warn">25.75" under 26"</span></td><td>28.75"</td><td></td></tr>
+                <tr class="help-oal-row-sbr"><td>10.0"</td><td class="help-oal-status-sbr">SBR / NFA</td><td>26.75"</td><td>29.75"</td><td></td></tr>
+                <tr class="help-oal-row-sbr"><td>10.3"</td><td class="help-oal-status-sbr">SBR / NFA</td><td>27.05"</td><td>30.05"</td><td>Mk18 / CQBR standard</td></tr>
+                <tr class="help-oal-row-sbr"><td>10.5"</td><td class="help-oal-status-sbr">SBR / NFA</td><td>27.25"</td><td>30.25"</td><td>Most popular SBR length</td></tr>
+                <tr class="help-oal-row-sbr"><td>11.5"</td><td class="help-oal-status-sbr">SBR / NFA</td><td>28.25"</td><td>31.25"</td><td>Common gov SBR length</td></tr>
+                <tr class="help-oal-row-sbr"><td>12.5"</td><td class="help-oal-status-sbr">SBR / NFA</td><td>29.25"</td><td>32.25"</td><td></td></tr>
+                <tr class="help-oal-row-sbr"><td>13.7"</td><td class="help-oal-status-sbr">SBR / NFA</td><td>30.45"</td><td>33.45"</td><td>Pinned/welded muzzle can meet 16" legal</td></tr>
+                <tr class="help-oal-row-sbr"><td>14.5"</td><td class="help-oal-status-sbr">SBR / NFA</td><td>31.25"</td><td>34.25"</td><td>Pinned/welded muzzle can meet 16" legal</td></tr>
+                <tr class="help-oal-row-rifle"><td>16.0"</td><td class="help-oal-status-rifle">Non-NFA rifle</td><td>32.75"</td><td>35.75"</td><td>Minimum non-NFA rifle barrel</td></tr>
+                <tr class="help-oal-row-rifle"><td>18.0"</td><td class="help-oal-status-rifle">Non-NFA rifle</td><td>34.75"</td><td>37.75"</td><td></td></tr>
+                <tr class="help-oal-row-rifle"><td>20.0"</td><td class="help-oal-status-rifle">Non-NFA rifle</td><td>36.75"</td><td>39.75"</td><td>M16 / A2 profile equivalent</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="help-note" style="margin:0;border-left:0;border-top:1px solid var(--border);border-radius:0">
+            Baseline assumes mil-spec lower with a 6-position collapsible stock. Form 1 OAL is measured with stock fully extended. Removable muzzle devices are excluded.
+          </div>
+        </details>
+
       </div>
 
     </div>
@@ -1819,8 +1924,8 @@
             <option>Machine Gun</option><option>AOW</option><option>DD</option>
           </select>
         </div>
-        <div class="form-group"><label>Barrel Length (inches)</label><input type="number" id="ff-barrel" placeholder="e.g. 16" step="0.1" min="0"></div>
-        <div class="form-group"><label>Overall Length (inches)</label><input type="number" id="ff-oal" placeholder="e.g. 35.5" step="0.1" min="0"></div>
+        <div class="form-group"><label>Barrel Length (inches)<button type="button" class="field-help-link" onclick="openHelpTo('help-oal-quick-chart')">OAL chart</button></label><input type="number" id="ff-barrel" placeholder="e.g. 16" step="0.1" min="0"></div>
+        <div class="form-group"><label>Overall Length (inches)<button type="button" class="field-help-link" onclick="openHelpTo('help-oal-quick-chart')">OAL chart</button></label><input type="number" id="ff-oal" placeholder="e.g. 35.5" step="0.1" min="0"></div>
         <div class="form-group full"><label>NFA Order #</label><input type="text" id="ff-nfa-order" placeholder="e.g. 20250301-XXXXX" style="font-family:'IBM Plex Mono',monospace"></div>
         <div class="form-group full">
           <label>NFA Form Status</label>
@@ -3907,6 +4012,15 @@ async function viewDocFile(id) {
 ═══════════════════════════ */
 function openHelp()  { document.getElementById('help-modal').classList.add('open'); }
 function closeHelp() { document.getElementById('help-modal').classList.remove('open'); }
+function openHelpTo(sectionId) {
+  openHelp();
+  const node = document.getElementById(sectionId);
+  if (!node) return;
+  if (node.tagName === 'DETAILS') node.open = true;
+  setTimeout(() => {
+    node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+}
 
 /* ═══════════════════════════
    KEYBOARD

@@ -7,8 +7,8 @@ Armory is built as a single-file web app and can run in a browser, Docker contai
 ## Download Installers
 
 - Latest release: https://github.com/jasweaver/armory/releases/latest
-- macOS DMG: https://github.com/jasweaver/armory/releases/download/v1.0.1/Armory-1.0.1.dmg
-- Windows EXE: https://github.com/jasweaver/armory/releases/download/v1.0.1/Armory-Setup-1.0.1.exe
+- macOS DMG: https://github.com/jasweaver/armory/releases/download/v1.0.2/Armory-1.0.2.dmg
+- Windows EXE: https://github.com/jasweaver/armory/releases/download/v1.0.2/Armory-Setup-1.0.2.exe
 
 Note: current installers are unsigned test builds and may show OS security prompts on first launch.
 
@@ -84,3 +84,27 @@ Use this README as the repository landing page.
 - `SECURITY.md`
 - `CHANGELOG.md`
 - `CODE_OF_CONDUCT.md`
+- `docs/PROJECT.md`
+- `docs/ROADMAP.md`
+- `docs/STATE.md`
+- `docs/ARCHITECTURE.md`
+- `docs/STRUCTURE.md`
+- `docs/BRANCHING_STRATEGY.md`
+- `docs/QUICKSTART.md`
+- `docs/GITHUB_LABELS.md`
+
+## Standards Tooling
+
+Repository workflow helper scripts are available under `scripts/`:
+
+- `scripts/new-branch.sh`
+- `scripts/project-status.sh`
+- `scripts/end-of-day.sh`
+- `scripts/apply-labels.sh`
+- `scripts/fix-unlabeled-issues.sh`
+
+Optional local hooks are under `.githooks/` and can be enabled with:
+
+```bash
+git config core.hooksPath .githooks
+```
